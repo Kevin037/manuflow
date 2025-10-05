@@ -1,0 +1,131 @@
+# Project Context
+
+Web-based Manufacturing ERP & Inventory Control
+
+Stack: Laravel 12, MySQL, Tailwind CSS
+
+# Architecture Rules
+
+- Thin controllers
+- Business logic in Services/Models
+- FormRequests for validation
+- Yajra Datatables server-side
+- Blade components for alerts/cards/forms/modals
+- theme.php for color overrides
+- Tailwind + modern layout (sidebar, dropdown menu grouping)
+- Auth complete (register, login, forgot password, verify email)
+- Exports: Excel (maatwebsite/excel) + PDF (dompdf)
+- Seeders & Factories for demo data
+- Responsiveness + basic a11y
+
+# Folder Conventions
+
+- resources/views/layouts/
+- resources/views/components/
+- app/Services/
+- app/Http/Requests/
+- app/Http/Controllers/
+
+#Database
+1. users
+    - id (int)
+    - name (varchar)
+    - email (varchar)
+    - password (varchar)
+    - verify_email (datetime | nullable)
+    - photo (varchar | nullable)
+    - phone (int | nullable)
+2. products
+    - id (int)
+    - name (varchar)
+    - sku (varchar)
+    - photo (varchar)
+    - price (double)
+    - qty  (double)
+    - formula_id (BigInt)
+3. materials
+    - id (int)
+    - name (varchar)
+    - price (double)
+    - qty (double)
+    - supplier_id (BigInt)
+4. suppliers
+    - id (int)
+    - name (varchar)
+    - phone (int)
+5. customers
+    - id (int)
+    - name (varchar)
+    - phone (int)
+6. formulas
+    - id (int)
+    - name (varchar)
+    - no (varchar)
+    - total (double)
+7. formula_details
+    - id (int)
+    - formula_id (BigInt)
+    - material_id (BigInt)
+    - qty (double)
+8. productions
+    - id (int)
+    - no (varchar)
+    - dt (date)
+    - product_id (BigInt)
+    - qty (double)
+    - notes (Longtext | nullable)
+    - status (enum: pending, completed(default))
+9. purchase_orders
+    - id (int)
+    - no (varchar)
+    - dt (date)
+    - supplier_id (BigInt)
+    - total (double)
+    - status (enum: pending, completed(default))
+10. purchase_order_details
+    - id (int)
+    - purchase_order_id (BigInt)
+    - material_id (BigInt)
+    - qty (double)
+11. orders
+    - id (int)
+    - no (varchar)
+    - dt (date)
+    - customer_id (BigInt)
+    - total (double)
+    - status (enum: pending, completed(default))
+12. order_details
+    - id (int)
+    - order_id (BigInt)
+    - product_id (BigInt)
+    - qty (double)
+13. invoices
+    - id (int)
+    - no (varchar | nullable)
+    - dt (date)
+    - order_id (BigInt)
+    - status (unpaid/partial/paid/overdue)
+14. payments
+    - id  (int)
+    - no (varchar | nullable)
+    - invoice_id (BigInt)
+    - bank_account_id (BigInt | nullable)
+    - bank_account_name (BigInt | nullable)
+    - bank_account_type (BigInt | nullable)
+    - paid_at (datetime | nullable)
+    - payment_type (enum: cash, transfer(default))
+15. journal_entries
+    - id (int)
+    - transaction_id (BigInt)
+    - transaction_name (varchar)
+    - dt (date)
+    - account_id (BigInt)
+    - debit (double)
+    - credit (double)
+    - desc (Longtext | nullable)
+    - journal_entry_id (BigInt)
+16. accounts
+    - id (int)
+    - code (varchar)
+    - name (varchar)
+    - parent_id (BigInt)
