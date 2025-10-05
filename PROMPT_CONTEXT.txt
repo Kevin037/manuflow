@@ -7,7 +7,7 @@ Stack: Laravel 12, MySQL, Tailwind CSS
 # Architecture Rules
 
 - Thin controllers
-- Business logic in Services/Models
+- Business logic in Models
 - FormRequests for validation
 - Yajra Datatables server-side
 - Blade components for alerts/cards/forms/modals
@@ -17,12 +17,19 @@ Stack: Laravel 12, MySQL, Tailwind CSS
 - Exports: Excel (maatwebsite/excel) + PDF (dompdf)
 - Seeders & Factories for demo data
 - Responsiveness + basic a11y
+- Modern UI on entire project
+- On File field while file is uploaded, a preview of the file will be displayed immediately & realtime.
+- Dropdown menus are given proportional SVG icons.
+- Selecting a menu item also opens its dropdown group.
+- Ensure element shown by proper margin & padding soo look tidy.
+- Use modern alerts (dialogs), don't use the built-in JavaScript. Ensure showing alert according to result (error / success)
+- Maximize Tailwind's use to enhance the overall project UI.
+- Use select2 for select option fields.
 
 # Folder Conventions
 
 - resources/views/layouts/
 - resources/views/components/
-- app/Services/
 - app/Http/Requests/
 - app/Http/Controllers/
 

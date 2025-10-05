@@ -2,12 +2,25 @@
     class="fixed top-0 left-0 z-40 w-sidebar h-screen pt-topbar transition-transform duration-300 ease-in-out bg-white border-r border-gray-200 shadow-lg lg:translate-x-0"
     :class="$store.sidebar.open ? 'translate-x-0' : '-translate-x-full'"
     x-data="{
-        masterDataOpen: false,
-        productionOpen: false,
-        purchasingOpen: false,
-        salesOpen: false,
-        accountingOpen: false,
-        reportsOpen: false
+        masterDataOpen: {{ request()->is('users*') || request()->is('materials*') || request()->is('customers*') || request()->is('suppliers*') || request()->is('formulas*') ? 'true' : 'false' }},
+        productionOpen: {{ request()->is('production*') ? 'true' : 'false' }},
+        purchasingOpen: {{ request()->is('purchasing*') || request()->is('purchase*') ? 'true' : 'false' }},
+        salesOpen: {{ request()->is('sales*') || request()->is('orders*') || request()->is('invoices*') ? 'true' : 'false' }},
+        accountingOpen: {{ request()->is('accounting*') || request()->is('journal*') || request()->is('payments*') ? 'true' : 'false' }},
+        reportsOpen: {{ request()->is('reports*') ? 'true' : 'false' }},
+        
+        toggleMenu(menu) {
+            // Close all other menus
+            if (menu !== 'masterData') this.masterDataOpen = false;
+            if (menu !== 'production') this.productionOpen = false;
+            if (menu !== 'purchasing') this.purchasingOpen = false;
+            if (menu !== 'sales') this.salesOpen = false;
+            if (menu !== 'accounting') this.accountingOpen = false;
+            if (menu !== 'reports') this.reportsOpen = false;
+            
+            // Toggle the selected menu
+            this[menu + 'Open'] = !this[menu + 'Open'];
+        }
     }"
 >
     <!-- Sidebar backdrop for mobile -->
@@ -40,17 +53,17 @@
             <!-- Master Data -->
             <li>
                 <button 
-                    @click="masterDataOpen = !masterDataOpen" 
+                    @click="toggleMenu('masterData')" 
                     type="button" 
                     class="flex items-center w-full p-3 text-base text-gray-900 transition duration-200 rounded-xl group hover:bg-gray-100 hover:text-primary-600"
-                    :class="masterDataOpen ? 'bg-gray-50 text-primary-600' : ''"
+                    :class="masterDataOpen ? 'bg-primary-50 text-primary-600' : ''"
                 >
-                    <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-200 group-hover:text-primary-600" :class="masterDataOpen ? 'text-primary-600' : ''" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 21">
-                        <path d="M15 12a1 1 0 0 0 .962-.726l2-7A1 1 0 0 0 17 3H3.77L3.175.745A1 1 0 0 0 2.208 0H1a1 1 0 0 0 0 2h.438l.6 2.255v.019l2 7 .746 2.986A3 3 0 1 0 9 17a2.966 2.966 0 0 0-.184-1h2.368c-.118.32-.18.659-.184 1a3 3 0 1 0 3-3H6.78l-.5-2H15Z"/>
+                    <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-200 group-hover:text-primary-600" :class="masterDataOpen ? 'text-primary-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4m16 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
                     </svg>
                     <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Master Data</span>
-                    <svg class="w-3 h-3 transition-transform duration-200" :class="masterDataOpen ? 'rotate-180' : ''" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                    <svg class="w-4 h-4 transition-transform duration-200" :class="masterDataOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <ul 
@@ -65,27 +78,42 @@
                     style="display: none;"
                 >
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
-                            Products
+                        <a href="{{ route('users.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('users.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            Users
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                        <a href="{{ route('materials.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('materials.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
                             Materials
                         </a>
                     </li>
                     <li>
                         <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
                             Suppliers
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                        <a href="{{ route('customers.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('customers.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
                             Customers
                         </a>
                     </li>
                     <li>
                         <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
                             Formulas
                         </a>
                     </li>
@@ -95,19 +123,17 @@
             <!-- Production -->
             <li>
                 <button 
-                    @click="productionOpen = !productionOpen" 
+                    @click="toggleMenu('production')" 
                     type="button" 
                     class="flex items-center w-full p-3 text-base text-gray-900 transition duration-200 rounded-xl group hover:bg-gray-100 hover:text-primary-600"
-                    :class="productionOpen ? 'bg-gray-50 text-primary-600' : ''"
+                    :class="productionOpen ? 'bg-primary-50 text-primary-600' : ''"
                 >
-                    <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-200 group-hover:text-primary-600" :class="productionOpen ? 'text-primary-600' : ''" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5 5V.13a2.96 2.96 0 0 0-1.293.749L.879 3.707A2.98 2.98 0 0 0 .13 5H5Z"/>
-                        <path d="M6.737 11.061a2.961 2.961 0 0 1 .81-1.515l6.117-6.116A4.839 4.839 0 0 1 16 2.141V2a1.97 1.97 0 0 0-1.933-2H7v5a2 2 0 0 1-2 2H0v11a1.969 1.969 0 0 0 1.933 2h12.134A1.97 1.97 0 0 0 16 18v-3.093l-1.546 1.546c-.413.413-.94.695-1.513.81l-3.4.679a2.947 2.947 0 0 1-1.85-.227 2.96 2.96 0 0 1-1.635-3.257l.681-3.397Z"/>
-                        <path d="M8.961 16a.93.93 0 0 0 .189-.019l3.4-.679a.961.961 0 0 0 .49-.263l6.118-6.117a2.884 2.884 0 0 0-4.079-4.078l-6.117 6.117a.96.96 0 0 0-.263.491l-.679 3.4A.961.961 0 0 0 8.961 16Zm7.477-9.8a.958.958 0 0 1 .68-.281.961.961 0 0 1 .682 1.644l-.315.315-1.36-1.36.313-.318Zm-5.911 5.911 4.236-4.236 1.359 1.359-4.236 4.237-1.7.339.341-1.699Z"/>
+                    <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-200 group-hover:text-primary-600" :class="productionOpen ? 'text-primary-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                     </svg>
                     <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Production</span>
-                    <svg class="w-3 h-3 transition-transform duration-200" :class="productionOpen ? 'rotate-180' : ''" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                    <svg class="w-4 h-4 transition-transform duration-200" :class="productionOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <ul 
@@ -123,11 +149,17 @@
                 >
                     <li>
                         <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
                             Production Orders
                         </a>
                     </li>
                     <li>
                         <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
                             Production Reports
                         </a>
                     </li>
