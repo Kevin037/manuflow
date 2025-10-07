@@ -7,6 +7,7 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\FormulaController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PurchaseOrderController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,6 +31,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('suppliers', SupplierController::class);
     Route::resource('formulas', FormulaController::class);
     Route::resource('products', ProductController::class);
+    
+    // Transaction Routes
+    Route::resource('purchase-orders', PurchaseOrderController::class);
+    Route::post('purchase-orders/{purchaseOrder}/complete', [PurchaseOrderController::class, 'complete'])->name('purchase-orders.complete');
 });
 
 require __DIR__.'/auth.php';

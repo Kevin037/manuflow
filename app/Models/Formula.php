@@ -21,6 +21,16 @@ class Formula extends Model
         'total' => 'decimal:2'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($model) {
+            $model->no = 'FOR/' . $model->id . date('dmy');
+            $model->save();
+        });
+    }
+
     // Relationships
     public function formulaDetails(): HasMany
     {
