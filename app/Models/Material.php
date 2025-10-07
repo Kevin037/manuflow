@@ -10,7 +10,13 @@ class Material extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'name',
+        'price', 
+        'unit',
+        'qty',
+        'supplier_id'
+    ];
 
     // Relationships
     public function supplier(): BelongsTo

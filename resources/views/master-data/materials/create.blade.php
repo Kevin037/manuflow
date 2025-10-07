@@ -47,15 +47,15 @@
 
                         <div>
                             <label for="price" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Unit Price ($) *
+                                Unit Price (Rp) *
                             </label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                    <span class="text-gray-500 sm:text-sm">Rp</span>
                                 </div>
-                                <input type="number" name="price" id="price" value="{{ old('price') }}" step="0.01" min="0"
-                                       class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('price') border-red-500 ring-2 ring-red-200 @enderror"
-                                       placeholder="0.00">
+                                <input type="number" name="price" id="price" value="{{ old('price') }}" step="1" min="0"
+                                       class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('price') border-red-500 ring-2 ring-red-200 @enderror"
+                                       placeholder="0">
                             </div>
                             @error('price')
                                 <p class="mt-2 text-sm text-red-600 flex items-center">

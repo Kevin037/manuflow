@@ -197,7 +197,7 @@ $(document).ready(function() {
                                        </span>
                                    </div>
                                    <div class="text-sm font-semibold text-gray-900">
-                                       $${parseFloat(row.price).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                       Rp ${new Intl.NumberFormat('id-ID').format(parseFloat(row.price))}
                                    </div>
                                </div>
                             </div>`;
@@ -226,7 +226,7 @@ $(document).ready(function() {
                     const date = new Date(data);
                     return `<div class="py-4 px-6">
                                <div class="text-sm text-gray-500">
-                                   ${date.toLocaleDateString('en-US', { 
+                                   ${date.toLocaleDateString('id-ID', { 
                                        year: 'numeric', 
                                        month: 'short', 
                                        day: 'numeric' 

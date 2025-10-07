@@ -33,9 +33,14 @@
                     </div>
 
                     <div>
-                        <label for="price" class="block text-sm font-medium text-gray-700 mb-2">Price</label>
-                        <input type="number" name="price" id="price" value="{{ old('price', $material->price) }}" step="0.01" min="0"
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('price') border-red-500 @enderror">
+                        <label for="price" class="block text-sm font-medium text-gray-700 mb-2">Price (Rp)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">Rp</span>
+                            </div>
+                            <input type="number" name="price" id="price" value="{{ old('price', $material->price) }}" step="1" min="0"
+                                   class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent @error('price') border-red-500 @enderror">
+                        </div>
                         @error('price')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror

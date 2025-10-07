@@ -2,7 +2,7 @@
     class="fixed top-0 left-0 z-40 w-sidebar h-screen pt-topbar transition-transform duration-300 ease-in-out bg-white border-r border-gray-200 shadow-lg lg:translate-x-0"
     :class="$store.sidebar.open ? 'translate-x-0' : '-translate-x-full'"
     x-data="{
-        masterDataOpen: {{ request()->is('users*') || request()->is('materials*') || request()->is('customers*') || request()->is('suppliers*') || request()->is('formulas*') ? 'true' : 'false' }},
+        masterDataOpen: {{ request()->is('users*') || request()->is('materials*') || request()->is('customers*') || request()->is('suppliers*') || request()->is('formulas*') || request()->is('products*') ? 'true' : 'false' }},
         productionOpen: {{ request()->is('production*') ? 'true' : 'false' }},
         purchasingOpen: {{ request()->is('purchasing*') || request()->is('purchase*') ? 'true' : 'false' }},
         salesOpen: {{ request()->is('sales*') || request()->is('orders*') || request()->is('invoices*') ? 'true' : 'false' }},
@@ -94,7 +94,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                        <a href="{{ route('suppliers.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('suppliers.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
                             <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                             </svg>
@@ -110,11 +110,19 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                        <a href="{{ route('formulas.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('formulas.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
                             <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                             </svg>
                             Formulas
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('products.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('products.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                            Products
                         </a>
                     </li>
                 </ul>

@@ -22,9 +22,10 @@ Stack: Laravel 12, MySQL, Tailwind CSS
 - Dropdown menus are given proportional SVG icons.
 - Selecting a menu item also opens its dropdown group.
 - Ensure element shown by proper margin & padding soo look tidy.
-- Use modern alerts (dialogs), don't use the built-in JavaScript. Ensure showing alert according to result (error / success)
+- Use modern sweet alerts (confirm dialogs), don't use the built-in JavaScript. Ensure showing alert according to result (error / success)
 - Maximize Tailwind's use to enhance the overall project UI.
 - Use select2 for select option fields.
+- Use rupiah currency for this project about anything related with money/price
 
 # Folder Conventions
 

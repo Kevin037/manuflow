@@ -1,37 +1,37 @@
 @extends('layouts.admin')
 
-@section('title', 'Users')
+@section('title', 'Suppliers')
 
 @section('content')
 <!-- Page Header -->
 <div class="mb-8">
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight text-gray-900">Users</h1>
-            <p class="mt-2 text-sm text-gray-600">Manage system users and their permissions</p>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">Suppliers</h1>
+            <p class="mt-2 text-sm text-gray-600">Manage your suppliers and their information</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <a href="{{ route('users.create') }}" 
+            <a href="{{ route('suppliers.create') }}" 
                class="inline-flex items-center gap-x-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 transition-all duration-200">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                Add New User
+                Add New Supplier
             </a>
         </div>
     </div>
 </div>
 
-<!-- Users Table Card -->
+<!-- Suppliers Table Card -->
 <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
     <!-- Table Header -->
     <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
-            <h2 class="text-base font-semibold text-gray-900">All Users</h2>
+            <h2 class="text-base font-semibold text-gray-900">All Suppliers</h2>
             <div class="flex items-center gap-x-3">
                 <!-- Search will be handled by DataTables -->
                 <div class="text-sm text-gray-500">
-                    <span id="users-count">Loading...</span> users
+                    <span id="suppliers-count">Loading...</span> suppliers
                 </div>
             </div>
         </div>
@@ -39,14 +39,9 @@
     
     <!-- Table -->
     <div class="overflow-hidden">
-        <table id="users-table" class="min-w-full divide-y divide-gray-200">
+        <table id="suppliers-table" class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50/80">
                 <tr>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        <div class="flex items-center gap-x-2">
-                            <span>Photo</span>
-                        </div>
-                    </th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         <div class="flex items-center gap-x-2">
                             <span>Name</span>
@@ -54,12 +49,12 @@
                     </th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         <div class="flex items-center gap-x-2">
-                            <span>Email</span>
+                            <span>Phone Number</span>
                         </div>
                     </th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         <div class="flex items-center gap-x-2">
-                            <span>Joined</span>
+                            <span>Added</span>
                         </div>
                     </th>
                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -77,125 +72,74 @@
 
 @push('styles')
 <style>
-    /* Custom DataTables Styling */
-    .dataTables_wrapper {
-        padding: 0;
-    }
+.dataTables_wrapper {
+    padding: 0;
+}
 
-    .dataTables_wrapper .dataTables_length,
-    .dataTables_wrapper .dataTables_filter {
-        margin-bottom: 0;
-    }
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 0;
+}
 
-    .dataTables_wrapper .dataTables_length select {
-        @apply rounded-lg border-gray-300 py-2 px-3 text-sm focus:border-primary-500 focus:ring-primary-500;
-    }
+.dataTables_wrapper .dataTables_length select {
+    @apply rounded-lg border-gray-300 py-2 px-3 text-sm focus:border-primary-500 focus:ring-primary-500;
+}
 
-    .dataTables_wrapper .dataTables_filter input {
-        @apply rounded-lg border-gray-300 py-2 px-3 text-sm focus:border-primary-500 focus:ring-primary-500;
-        margin-left: 0.5rem;
-    }
+.dataTables_wrapper .dataTables_filter input {
+    @apply rounded-lg border-gray-300 py-2 px-3 text-sm focus:border-primary-500 focus:ring-primary-500;
+    margin-left: 0.5rem;
+}
 
-    .dataTables_wrapper .dataTables_info {
-        @apply text-sm text-gray-700;
-    }
+.dataTables_wrapper .dataTables_info {
+    @apply text-sm text-gray-700;
+}
 
-    .dataTables_wrapper .dataTables_paginate {
-        @apply flex items-center gap-x-1;
-    }
+.dataTables_wrapper .dataTables_paginate {
+    @apply flex items-center gap-x-1;
+}
 
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-        @apply px-3 py-2 mx-0.5 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200;
-        background: white !important;
-        border: 1px solid #d1d5db !important;
-    }
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    @apply px-3 py-2 mx-0.5 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200;
+    background: white !important;
+    border: 1px solid #d1d5db !important;
+}
 
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-        @apply bg-primary-600 border-primary-600 text-white hover:bg-primary-700;
-        background: rgb(79 70 229) !important;
-        border-color: rgb(79 70 229) !important;
-        color: white !important;
-    }
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    @apply bg-primary-600 border-primary-600 text-white hover:bg-primary-700;
+    background: rgb(79 70 229) !important;
+    border-color: rgb(79 70 229) !important;
+    color: white !important;
+}
 
-    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-        @apply bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed;
-        background: #f3f4f6 !important;
-        border-color: #e5e7eb !important;
-    }
+table.dataTable tbody td {
+    padding: 0 !important;
+    border-top: 1px solid #f3f4f6 !important;
+}
 
-    .dataTables_wrapper .dataTables_processing {
-        @apply bg-white bg-opacity-90;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        border: none !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-        padding: 1rem 2rem !important;
-        border-radius: 0.5rem !important;
-    }
+table.dataTable thead th {
+    padding: 1rem 1.5rem !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    background-color: #f9fafb !important;
+}
 
-    /* Remove default DataTables cell padding and add custom spacing */
-    table.dataTable tbody td {
-        padding: 0 !important;
-        border-top: 1px solid #f3f4f6 !important;
-    }
+table.dataTable tbody tr {
+    min-height: 4rem;
+}
 
-    table.dataTable thead th {
-        padding: 1rem 1.5rem !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        background-color: #f9fafb !important;
-    }
-
-    /* Ensure consistent row height */
-    table.dataTable tbody tr {
-        min-height: 4rem;
-    }
-
-    /* Hover effect for table rows */
-    table.dataTable tbody tr:hover {
-        background-color: #f9fafb;
-    }
-
-    .dt-buttons {
-        @apply mb-4;
-    }
-
-    .dt-button {
-        @apply bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-200 mr-2;
-    }
+table.dataTable tbody tr:hover {
+    background-color: #f9fafb;
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
 $(document).ready(function() {
-    const table = $('#users-table').DataTable({
+    const table = $('#suppliers-table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '{{ route('users.index') }}',
+        ajax: '{{ route('suppliers.index') }}',
         columns: [
-            {
-                data: 'photo', 
-                name: 'photo', 
-                orderable: false, 
-                searchable: false,
-                render: function(data, type, row) {
-                    if (data && data !== '') {
-                        return `<div class="flex items-center py-4 px-6">
-                                   <div class="flex-shrink-0">
-                                       <img class="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm" src="${data}" alt="${row.name}">
-                                   </div>
-                                </div>`;
-                    }
-                    return `<div class="flex items-center py-4 px-6">
-                               <div class="flex-shrink-0">
-                                   <div class="h-12 w-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center ring-2 ring-white shadow-sm">
-                                       <span class="text-sm font-semibold text-white">${row.name.charAt(0).toUpperCase()}</span>
-                                   </div>
-                               </div>
-                            </div>`;
-                }
-            },
             {
                 data: 'name', 
                 name: 'name',
@@ -209,8 +153,8 @@ $(document).ready(function() {
                 }
             },
             {
-                data: 'email', 
-                name: 'email',
+                data: 'phone', 
+                name: 'phone',
                 render: function(data, type, row) {
                     return `<div class="py-4 px-6">
                                <div class="text-sm text-gray-900">${data}</div>
@@ -241,7 +185,7 @@ $(document).ready(function() {
                 render: function(data, type, row) {
                     return `<div class="py-4 px-6">
                                <div class="flex justify-end gap-x-2">
-                                   <a href="/users/${row.id}" 
+                                   <a href="/suppliers/${row.id}" 
                                       class="inline-flex items-center gap-x-1.5 rounded-lg bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors duration-200">
                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -249,14 +193,14 @@ $(document).ready(function() {
                                        </svg>
                                        View
                                    </a>
-                                   <a href="/users/${row.id}/edit" 
+                                   <a href="/suppliers/${row.id}/edit" 
                                       class="inline-flex items-center gap-x-1.5 rounded-lg bg-primary-50 px-3 py-2 text-xs font-medium text-primary-600 hover:bg-primary-100 transition-colors duration-200">
                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                        </svg>
                                        Edit
                                    </a>
-                                   <button onclick="deleteUser(${row.id})" 
+                                   <button onclick="deleteSupplier(${row.id})" 
                                            class="inline-flex items-center gap-x-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-100 transition-colors duration-200">
                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -269,29 +213,28 @@ $(document).ready(function() {
             }
         ],
         responsive: true,
-        order: [[1, 'asc']],
+        order: [[0, 'asc']],
         pageLength: 25,
         dom: '<"flex flex-col sm:flex-row sm:items-center sm:justify-between p-6 border-b border-gray-200"<"flex items-center gap-x-4"l><"flex items-center gap-x-4"f>>rt<"flex flex-col sm:flex-row sm:items-center sm:justify-between p-6 border-t border-gray-200"<"text-sm text-gray-700"i><"ml-auto"p>>',
         language: {
             lengthMenu: 'Show _MENU_ entries',
             search: 'Search:',
-            processing: '<div class="flex items-center gap-x-2"><svg class="animate-spin h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Loading users...</div>',
-            emptyTable: '<div class="text-center py-12"><div class="mx-auto h-12 w-12 text-gray-400"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path></svg></div><h3 class="mt-2 text-sm font-semibold text-gray-900">No users found</h3><p class="mt-1 text-sm text-gray-500">Get started by creating a new user.</p></div>',
-            info: 'Showing _START_ to _END_ of _TOTAL_ users',
-            infoEmpty: 'No users to show',
-            infoFiltered: '(filtered from _MAX_ total users)'
+            processing: 'Loading suppliers...',
+            emptyTable: 'No suppliers found',
+            info: 'Showing _START_ to _END_ of _TOTAL_ suppliers',
+            infoEmpty: 'No suppliers to show',
+            infoFiltered: '(filtered from _MAX_ total suppliers)'
         },
         drawCallback: function(settings) {
-            // Update the users count
-            $('#users-count').text(settings._iRecordsTotal);
+            $('#suppliers-count').text(settings._iRecordsTotal);
         }
     });
 
-    // Delete user function with modern alert
-    window.deleteUser = function(id) {
+    // Delete supplier function with modern alert
+    window.deleteSupplier = function(id) {
         Swal.fire({
-            title: 'Delete User',
-            text: 'Are you sure you want to delete this user? This action cannot be undone.',
+            title: 'Delete Supplier',
+            text: 'Are you sure you want to delete this supplier? This action cannot be undone.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
@@ -308,7 +251,7 @@ $(document).ready(function() {
                 // Show loading state
                 Swal.fire({
                     title: 'Deleting...',
-                    text: 'Please wait while we delete the user.',
+                    text: 'Please wait while we delete the supplier.',
                     icon: 'info',
                     allowOutsideClick: false,
                     allowEscapeKey: false,
@@ -318,7 +261,7 @@ $(document).ready(function() {
                     }
                 });
 
-                fetch(`/users/${id}`, {
+                fetch(`/suppliers/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -346,7 +289,7 @@ $(document).ready(function() {
                         // Show success message
                         Swal.fire({
                             title: 'Deleted!',
-                            text: data.message || 'User has been deleted successfully.',
+                            text: data.message || 'Supplier has been deleted successfully.',
                             icon: 'success',
                             timer: 3000,
                             showConfirmButton: false,
@@ -359,7 +302,7 @@ $(document).ready(function() {
                         // Handle server-side error
                         Swal.fire({
                             title: 'Error!',
-                            text: data.message || 'Failed to delete user.',
+                            text: data.message || 'Failed to delete supplier.',
                             icon: 'error',
                             confirmButtonColor: '#6366f1',
                             confirmButtonText: 'OK'
@@ -370,7 +313,7 @@ $(document).ready(function() {
                     console.error('Delete error:', error);
                     Swal.fire({
                         title: 'Error!',
-                        text: 'An error occurred while deleting the user. Please try again.',
+                        text: 'An error occurred while deleting the supplier. Please try again.',
                         icon: 'error',
                         confirmButtonColor: '#6366f1',
                         confirmButtonText: 'OK'
@@ -382,7 +325,7 @@ $(document).ready(function() {
 
     // Show loading state on page load
     $(document).on('DOMContentLoaded', function() {
-        $('#users-count').text('Loading...');
+        $('#suppliers-count').text('Loading...');
     });
 });
 </script>
