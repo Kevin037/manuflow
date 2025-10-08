@@ -9,6 +9,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -109,7 +110,12 @@ class InvoiceController extends Controller
 
     public function exportPdf(Invoice $invoice)
     {
-        // Placeholder - integrate dompdf/snappy later
-        return redirect()->back()->with('info','PDF export not implemented yet');
+        $invoice->load('order.orderDetails.product','order.customer','payments');
+        $pdf = Pdf::loadView('transactions.invoices.pdf', [
+            'invoice' => $invoice,
+            'generatedAt' => now()
+        ])->setPaper('A4','portrait');
+        $filename = str_replace('/','-', $invoice->no).'.pdf';
+        return $pdf->stream($filename); // open in browser tab
     }
 }

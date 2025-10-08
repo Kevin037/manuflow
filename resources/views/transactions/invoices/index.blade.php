@@ -27,21 +27,23 @@
     </div>
 
     <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
-        <div class="overflow-x-auto">
-            <table id="dataTable" class="w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50/50">
-                    <tr>
-                        <th class="py-4 pl-6 pr-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">#</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Invoice No.</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Date</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Order No.</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Total</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Status</th>
-                        <th class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200"></tbody>
-            </table>
+        <div class="relative">
+            <div class="overflow-x-auto">
+                <table id="dataTable" class="w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50/50">
+                        <tr>
+                            <th scope="col" class="py-4 pl-6 pr-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">#</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Invoice</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Order</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Total</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="relative py-4 pl-3 pr-6"><span class="sr-only">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -52,53 +54,117 @@
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.tailwindcss.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-$(function(){
+$(document).ready(function() {
     var table = $('#dataTable').DataTable({
-        processing:true,
-        serverSide:true,
-        ajax:"{{ route('invoices.index') }}",
-        columns:[
-            {data:'DT_RowIndex',name:'DT_RowIndex',orderable:false,searchable:false},
-            {data:'no',name:'no'},
-            {data:'dt',name:'dt'},
-            {data:'order_no',name:'order.no'},
-            {data:'total_formatted',name:'order.total'},
-            {data:'status',name:'status',orderable:false,searchable:false},
-            {data:'action',name:'action',orderable:false,searchable:false},
+        processing: true,
+        serverSide: true,
+        ajax: "{{ route('invoices.index') }}",
+        columns: [
+            { 
+                data: 'DT_RowIndex', name: 'DT_RowIndex', orderable:false, searchable:false,
+                render: function(data){
+                    return `<div class="py-4 px-6"><div class="text-sm font-medium text-gray-900">${data}</div></div>`;
+                }
+            },
+            { 
+                data: 'no', name: 'no',
+                render: function(data){
+                    return `<div class=\"py-4 px-6\"><div class=\"text-sm\"><div class=\"font-medium text-gray-900\">${data}</div><div class=\"text-gray-500\">Invoice</div></div></div>`
+                }
+            },
+            { 
+                data: 'dt', name: 'dt',
+                render: d => `<div class=\"py-4 px-6\"><div class=\"text-sm text-gray-900\">${d}</div></div>`
+            },
+            { 
+                data: 'order_no', name: 'order.no',
+                render: function(d){
+                    return `<div class=\"py-4 px-6\"><div class=\"text-sm font-medium text-gray-900\">${d || '-'}</div></div>`
+                }
+            },
+            { 
+                data: 'total_formatted', name: 'order.total',
+                render: function(d){
+                    return `<div class=\"py-4 px-6\"><div class=\"text-sm font-semibold text-primary-600\">${d}</div></div>`
+                }
+            },
+            { 
+                data: 'status', name: 'status', orderable:false, searchable:false,
+                render: function(d){
+                    return `<div class=\"py-4 px-6\">${d}</div>`
+                }
+            },
+            { 
+                data: 'action', name: 'action', orderable:false, searchable:false,
+                render: d => `<div class=\"py-4 px-6\">${d}</div>`
+            }
         ],
-        order:[[2,'desc']],
-        drawCallback:function(settings){
+        responsive: true,
+        order: [[2,'desc']],
+        pageLength: 25,
+        dom: '<"flex flex-col sm:flex-row sm:items-center sm:justify-between p-6 border-b border-gray-200"<"flex items-center gap-x-4"l><"flex items-center gap-x-4"f>>rt<"flex flex-col sm:flex-row sm:items-center sm:justify-between p-6 border-t border-gray-200"<"text-sm text-gray-700"i><"ml-auto"p>>',
+        language: {
+            lengthMenu: 'Show _MENU_ entries',
+            search: 'Search:',
+            processing: '<div class="flex items-center gap-x-2"><svg class="animate-spin h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Loading invoices...</div>',
+            emptyTable: '<div class="text-center py-12"><div class="mx-auto h-12 w-12 text-gray-400"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></div><h3 class="mt-2 text-sm font-semibold text-gray-900">No invoices found</h3><p class="mt-1 text-sm text-gray-500">Create a new invoice to get started.</p></div>',
+            info: 'Showing _START_ to _END_ of _TOTAL_ invoices',
+            infoEmpty: 'No invoices to show',
+            infoFiltered: '(filtered from _MAX_ total invoices)'
+        },
+        drawCallback: function(settings){
             $('#invoices-count').text(settings._iRecordsTotal);
         }
     });
 
-    $(document).on('click','.delete-btn',function(e){
+    // Delete handler (styled consistent with purchase orders)
+    $(document).on('click', '.delete-btn', function(e) {
         e.preventDefault();
         var url = $(this).data('url');
         Swal.fire({
-            title:'Delete Invoice',
-            text:'Are you sure you want to delete this invoice? This action cannot be undone.',
-            icon:'warning',
-            showCancelButton:true,
-            confirmButtonColor:'#ef4444',
-            cancelButtonColor:'#6b7280',
-            confirmButtonText:'Yes, delete it!'})
-        .then((result)=>{
+            title: 'Delete Invoice',
+            text: 'Are you sure you want to delete this invoice? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 focus:outline-none focus:border-red-700 focus:ring focus:ring-red-200 active:bg-red-600 disabled:opacity-25 transition mr-3',
+                cancelButton: 'inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-500 focus:outline-none focus:border-gray-700 focus:ring focus:ring-gray-200 active:bg-gray-600 disabled:opacity-25 transition'
+            }
+        }).then((result)=>{
             if(result.isConfirmed){
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait while we delete the invoice.',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
                 $.ajax({
-                    url:url,
-                    type:'DELETE',
-                    data:{_token:$('meta[name="csrf-token"]').attr('content')},
-                    success:function(resp){
+                    url: url,
+                    type: 'DELETE',
+                    data: { _token: $('meta[name="csrf-token"]').attr('content') },
+                    success: function(resp){
                         if(resp.success){
-                            Swal.fire('Deleted!',resp.message,'success');
                             table.ajax.reload(null,false);
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: resp.message,
+                                icon: 'success',
+                                confirmButtonColor: '#10b981'
+                            });
                         } else {
-                            Swal.fire('Error',resp.message,'error');
+                            Swal.fire({ title:'Error!', text:resp.message, icon:'error', confirmButtonColor:'#ef4444' });
                         }
                     },
-                    error:function(xhr){
-                        Swal.fire('Error','Failed to delete invoice','error');
+                    error: function(){
+                        Swal.fire({ title:'Error!', text:'Failed to delete invoice', icon:'error', confirmButtonColor:'#ef4444' });
                     }
                 });
             }
@@ -110,4 +176,21 @@ $(function(){
 
 @push('styles')
 <link href="https://cdn.datatables.net/1.13.7/css/dataTables.tailwindcss.min.css" rel="stylesheet">
+<style>
+/* Custom DataTables Styling (mirroring purchase orders) */
+.dataTables_wrapper { padding: 0; }
+table.dataTable tbody td { padding: 0 !important; }
+table.dataTable thead th { padding: 1rem 1.5rem !important; }
+table.dataTable tbody tr { min-height: 64px; }
+table.dataTable tbody tr:hover { background-color: #f9fafb !important; }
+.dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter { margin-bottom: 0; }
+.dataTables_wrapper .dataTables_length select { @apply rounded-lg border-gray-300 py-1.5 px-3 text-sm focus:border-primary-500 focus:ring-primary-500; }
+.dataTables_wrapper .dataTables_filter input { @apply rounded-lg border-gray-300 py-1.5 px-3 text-sm focus:border-primary-500 focus:ring-primary-500; margin-left: 0.5rem; }
+.dataTables_wrapper .dataTables_info { @apply text-sm text-gray-700 pt-4; }
+.dataTables_wrapper .dataTables_paginate { @apply pt-4; }
+.dataTables_wrapper .dataTables_paginate .paginate_button { @apply px-3 py-1.5 mx-0.5 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200; background: white !important; border: 1px solid #d1d5db !important; }
+.dataTables_wrapper .dataTables_paginate .paginate_button.current { @apply bg-primary-600 border-primary-600 text-white hover:bg-primary-700; background: rgb(79 70 229) !important; border-color: rgb(79 70 229) !important; color: white !important; }
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled { @apply bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed; background:#f3f4f6 !important; border-color:#e5e7eb !important; }
+.dataTables_wrapper .dataTables_processing { @apply bg-white bg-opacity-90; top:50% !important; left:50% !important; transform:translate(-50%,-50%) !important; border:none !important; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1) !important; padding:1rem 2rem !important; border-radius:0.5rem !important; }
+</style>
 @endpush
