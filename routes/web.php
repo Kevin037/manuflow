@@ -52,6 +52,10 @@ Route::middleware('auth')->group(function () {
     // Invoice Routes
     Route::resource('invoices', InvoiceController::class);
     Route::get('invoices/{invoice}/export', [InvoiceController::class, 'exportPdf'])->name('invoices.export');
+
+    // Payment Routes
+    Route::resource('payments', \App\Http\Controllers\PaymentController::class);
+    Route::get('payments/{payment}/export', [\App\Http\Controllers\PaymentController::class, 'exportPdf'])->name('payments.export');
 });
 
 require __DIR__.'/auth.php';

@@ -261,7 +261,10 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                        <a href="{{ route('payments.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('payments.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2m-6-4h8l-3-3m0 6l3-3" />
+                            </svg>
                             Payments
                         </a>
                     </li>
