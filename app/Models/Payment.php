@@ -17,11 +17,13 @@ class Payment extends Model
         'bank_account_name',
         'bank_account_type',
         'paid_at',
-        'payment_type'
+        'payment_type',
+        'amount'
     ];
 
     protected $casts = [
-        'paid_at' => 'datetime'
+        'paid_at' => 'datetime',
+        'amount' => 'decimal:2'
     ];
 
     protected static function boot()

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('bank_account_type')->nullable();
             $table->datetime('paid_at')->nullable();
             $table->enum('payment_type', ['cash', 'transfer'])->default('transfer');
+            $table->decimal('amount', 18, 2)->default(0);
             $table->timestamps();
             
             $table->index(['no', 'paid_at']);
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payments');
+    Schema::dropIfExists('payments');
     }
 };

@@ -9,6 +9,8 @@ use App\Http\Controllers\FormulaController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\TransactionProductionController;
+use App\Http\Controllers\SalesOrderController;
+use App\Http\Controllers\InvoiceController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -41,6 +43,15 @@ Route::middleware('auth')->group(function () {
     Route::resource('productions', TransactionProductionController::class);
     Route::post('productions/{production}/complete', [TransactionProductionController::class, 'complete'])->name('productions.complete');
     Route::post('productions/check-material-stock', [TransactionProductionController::class, 'checkMaterialStock'])->name('productions.check-material-stock');
+    
+    // Sales Order Routes
+    Route::resource('sales-orders', SalesOrderController::class);
+    Route::post('sales-orders/{order}/complete', [SalesOrderController::class, 'complete'])->name('sales-orders.complete');
+    Route::post('sales-orders/check-stock', [SalesOrderController::class, 'checkStock'])->name('sales-orders.check-stock');
+
+    // Invoice Routes
+    Route::resource('invoices', InvoiceController::class);
+    Route::get('invoices/{invoice}/export', [InvoiceController::class, 'exportPdf'])->name('invoices.export');
 });
 
 require __DIR__.'/auth.php';

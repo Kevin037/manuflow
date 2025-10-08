@@ -74,6 +74,22 @@ class Invoice extends Model
             'overdue' => '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Overdue</span>'
         ];
 
-        return $badges[$this->status] ?? $badges['unpaid'];
+        return $badges[$this->computed_status] ?? $badges['unpaid'];
+    }
+
+    public function getComputedStatusAttribute(): string
+    {
+        $orderTotal = $this->order?->total ?? 0;
+        $paid = $this->payments->sum('amount');
+        if ($orderTotal <= 0) return 'unpaid';
+        if ($paid >= $orderTotal) return 'paid';
+        if ($paid > 0) return 'partial';
+        return 'unpaid';
+    }
+
+    public function getTotalFormattedAttribute(): string
+    {
+        $total = $this->order?->total ?? 0;
+        return 'Rp '.number_format($total,0,',','.');
     }
 }
