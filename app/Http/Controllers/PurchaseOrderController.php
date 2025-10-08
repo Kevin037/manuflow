@@ -11,6 +11,7 @@ use App\Models\Material;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
+use App\Services\AccountingService;
 
 class PurchaseOrderController extends Controller
 {
@@ -62,7 +63,7 @@ class PurchaseOrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PurchaseOrderStoreRequest $request)
+    public function store(PurchaseOrderStoreRequest $request, AccountingService $accounting)
     {
         $data = $request->validated();
 
@@ -93,6 +94,11 @@ class PurchaseOrderController extends Controller
             // Calculate total and generate transaction number
             $purchaseOrder->calculateTotal();
 
+            // Record accounting for purchase order creation (raw material procurement)
+            $amount = (float)$purchaseOrder->total;
+            if($amount>0){
+                $accounting->record('purchase_order', $purchaseOrder->id, 'PurchaseOrder', $amount, $purchaseOrder->dt->format('Y-m-d'), 'Purchase order created '.$purchaseOrder->no);
+            }
             DB::commit();
 
             return redirect()
@@ -221,7 +227,7 @@ class PurchaseOrderController extends Controller
     /**
      * Mark purchase order as completed
      */
-    public function complete(PurchaseOrder $purchaseOrder)
+    public function complete(PurchaseOrder $purchaseOrder, AccountingService $accounting)
     {
         if (!$purchaseOrder->canBeModified()) {
             return response()->json([
@@ -232,6 +238,13 @@ class PurchaseOrderController extends Controller
 
         try {
             $purchaseOrder->markAsCompleted();
+            $purchaseOrder->refresh();
+            $amount = (float)$purchaseOrder->total;
+            // Record goods received (move raw material to WIP) and payment to supplier events
+            if($amount>0){
+                $accounting->record('goods_received', $purchaseOrder->id, 'PurchaseOrder', $amount, $purchaseOrder->dt->format('Y-m-d'), 'Goods received for '.$purchaseOrder->no);
+                $accounting->record('payment_to_supplier', $purchaseOrder->id, 'PurchaseOrder', $amount, $purchaseOrder->dt->format('Y-m-d'), 'Liability recognized for '.$purchaseOrder->no);
+            }
 
             return response()->json([
                 'success' => true,

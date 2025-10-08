@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\AccountingService;
 
 class InvoiceController extends Controller
 {
@@ -50,7 +51,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(InvoiceStoreRequest $request)
+    public function store(InvoiceStoreRequest $request, AccountingService $accounting)
     {
         $data = $request->validated();
         try {
@@ -60,6 +61,12 @@ class InvoiceController extends Controller
                 'order_id' => $data['order_id'],
                 'status' => 'unpaid'
             ]);
+            // Post accounting journal for invoice sent
+            $invoice->load('order');
+            $amount = (float)($invoice->order?->total ?? 0);
+            if($amount > 0){
+                $accounting->record('invoice_sent', $invoice->id, 'Invoice', $amount, $invoice->dt->format('Y-m-d'), 'Invoice created '.$invoice->no);
+            }
             DB::commit();
             return redirect()->route('invoices.index')->with('success','Invoice created successfully');
         } catch(\Exception $e){

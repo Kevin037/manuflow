@@ -6,6 +6,7 @@ use App\Models\Production;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\AccountingService;
 use Yajra\DataTables\Facades\DataTables;
 
 class TransactionProductionController extends Controller
@@ -92,7 +93,7 @@ class TransactionProductionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, AccountingService $accounting)
     {
         $request->validate([
             'dt' => 'required|date',
@@ -102,7 +103,7 @@ class TransactionProductionController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $accounting) {
                 $production = Production::create([
                     'dt' => $request->dt,
                     'product_id' => $request->product_id,
@@ -117,6 +118,13 @@ class TransactionProductionController extends Controller
                 
                 if (!$stockCheck['can_produce']) {
                     throw new \Exception('Insufficient material stock for production. ' . $stockCheck['message']);
+                }
+
+                // Record production process accounting (WIP -> Finished Goods)
+                // Using a notional amount: if product has price, multiply by qty; else use 0.
+                $amount = (float)($product->price ?? 0) * (float)$request->qty;
+                if($amount>0){
+                    $accounting->record('production_process', $production->id, 'Production', $amount, $production->dt->format('Y-m-d'), 'Production initiated '.$production->no);
                 }
             });
 

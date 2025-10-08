@@ -7,6 +7,7 @@ use App\Models\OrderDetail;
 use App\Models\Customer;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Services\AccountingService;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -104,7 +105,7 @@ class SalesOrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, AccountingService $accounting)
     {
         $request->validate([
             'dt' => 'required|date',
@@ -153,6 +154,10 @@ class SalesOrderController extends Controller
 
             $order->update(['total' => $total]);
 
+            // Post sales order journal
+            if($total > 0){
+                $accounting->record('sales_order', $order->id, 'SalesOrder', (float)$total, $order->dt->format('Y-m-d'), 'Sales order created '.$order->no);
+            }
             DB::commit();
 
             return redirect()->route('sales-orders.index')
@@ -340,7 +345,7 @@ class SalesOrderController extends Controller
     /**
      * Complete the sales order
      */
-    public function complete(Order $order)
+    public function complete(Order $order, AccountingService $accounting)
     {
         if ($order->status === 'completed') {
             return response()->json([
@@ -353,6 +358,7 @@ class SalesOrderController extends Controller
             DB::beginTransaction();
 
             $order->update(['status' => 'completed']);
+            // Optionally record another event if needed (e.g., goods delivered) – skipping unless specified
 
             DB::commit();
 

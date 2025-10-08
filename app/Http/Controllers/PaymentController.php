@@ -7,6 +7,7 @@ use App\Http\Requests\PaymentUpdateRequest;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Services\AccountingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -38,7 +39,7 @@ class PaymentController extends Controller
         return view('transactions.payments.create', compact('invoices'));
     }
 
-    public function store(PaymentStoreRequest $request)
+    public function store(PaymentStoreRequest $request, AccountingService $accounting)
     {
         $data = $request->validated();
         try {
@@ -61,6 +62,8 @@ class PaymentController extends Controller
                 }
             }
 
+            // Record accounting journal entries (payment received)
+            $accounting->record('payment_received', $payment->id, 'Payment', (float)$payment->amount, $payment->paid_at->format('Y-m-d'), 'Payment received for invoice '.$invoice->no);
             DB::commit();
             return redirect()->route('payments.index')->with('success','Payment recorded successfully');
         } catch(\Exception $e){
