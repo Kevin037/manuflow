@@ -14,17 +14,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Base demo data
+        if(!User::where('email','test@example.com')->exists()){
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        if(!Supplier::where('name','Default Supplier')->exists()){
+            Supplier::create([
+                'name' => 'Default Supplier',
+                'phone' => '0000000000',
+            ]);
+        }
 
-        // Create default supplier
-        Supplier::create([
-            'name' => 'Default Supplier',
-            'phone' => '0000000000',
-        ]);
+        // Chart of Accounts
+        $this->call(AccountsTableSeeder::class);
     }
 }
