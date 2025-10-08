@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class Production extends Model
 {
@@ -54,6 +55,43 @@ class Production extends Model
     public function scopeByProduct($query, $productId)
     {
         return $query->where('product_id', $productId);
+    }
+
+    // Business Logic Methods
+    public function canBeModified(): bool
+    {
+        return $this->status !== 'completed';
+    }
+
+    /**
+     * Update material stock when production is completed
+     */
+    public function updateMaterialStock()
+    {
+        if ($this->status === 'completed') {
+            DB::transaction(function () {
+                $product = $this->product->load('formula.formulaDetails.material');
+                
+                if ($product->formula) {
+                    foreach ($product->formula->formulaDetails as $detail) {
+                        $requiredQty = $detail->qty * $this->qty;
+                        $detail->material->decrement('qty', $requiredQty);
+                    }
+                }
+            });
+        }
+        return $this;
+    }
+
+    /**
+     * Update product stock when production is completed
+     */
+    public function updateProductStock()
+    {
+        if ($this->status === 'completed') {
+            $this->product->increment('qty', $this->qty);
+        }
+        return $this;
     }
 
     // Accessors

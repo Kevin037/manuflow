@@ -8,6 +8,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\FormulaController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\TransactionProductionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -35,6 +36,11 @@ Route::middleware('auth')->group(function () {
     // Transaction Routes
     Route::resource('purchase-orders', PurchaseOrderController::class);
     Route::post('purchase-orders/{purchaseOrder}/complete', [PurchaseOrderController::class, 'complete'])->name('purchase-orders.complete');
+    
+    // Production Routes
+    Route::resource('productions', TransactionProductionController::class);
+    Route::post('productions/{production}/complete', [TransactionProductionController::class, 'complete'])->name('productions.complete');
+    Route::post('productions/check-material-stock', [TransactionProductionController::class, 'checkMaterialStock'])->name('productions.check-material-stock');
 });
 
 require __DIR__.'/auth.php';
