@@ -28,4 +28,33 @@ class JournalEntry extends Model
     {
         return $this->belongsTo(Account::class);
     }
+
+    /**
+     * Dynamic relationship to the transaction model based on transaction_name and transaction_id
+     */
+    public function transaction()
+    {
+        $modelClass = $this->resolveModelClass($this->transaction_name);
+        if ($modelClass && class_exists($modelClass)) {
+            return $this->belongsTo($modelClass, 'transaction_id');
+        }
+        // fallback: return null relationship
+        return null;
+    }
+
+    /**
+     * Helper to resolve model class from table name
+     */
+    protected function resolveModelClass($table)
+    {
+        // Map table names to model classes (add more as needed)
+        $map = [
+            'orders' => \App\Models\Order::class,
+            'purchase_orders' => \App\Models\PurchaseOrder::class,
+            'productions' => \App\Models\Production::class,
+            'invoices' => \App\Models\Invoice::class,
+            'payments' => \App\Models\Payment::class,
+        ];
+        return $map[$table] ?? null;
+    }
 }

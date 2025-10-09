@@ -6,7 +6,7 @@
         productionOpen: {{ request()->is('productions*') ? 'true' : 'false' }},
         purchasingOpen: {{ request()->is('purchasing*') || request()->is('purchase*') ? 'true' : 'false' }},
         salesOpen: {{ request()->is('sales*') || request()->is('orders*') || request()->is('invoices*') ? 'true' : 'false' }},
-        accountingOpen: {{ request()->is('accounting*') || request()->is('journal*') || request()->is('payments*') ? 'true' : 'false' }},
+    accountingOpen: {{ request()->is('accounting*') || request()->is('journal*') || request()->is('payments*') || request()->is('trial-balance*') ? 'true' : 'false' }},
         reportsOpen: {{ request()->is('reports*') ? 'true' : 'false' }},
         
         toggleMenu(menu) {
@@ -300,13 +300,27 @@
                     style="display: none;"
                 >
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
-                            Chart of Accounts
+                        <a href="{{ route('ledger.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('ledger.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            Buku Besar
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
+                        <a href="{{ route('chart.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('chart.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 13h3V7H7v6zm5 4h3V7h-3v10zm5-2h3V7h-3v8z"/></svg>
+                            Chart of Account
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('journals.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('journals.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3m6 0a3 3 0 11-6 0 3 3 0 016 0zm-9 8h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                             Journal Entries
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('trial-balance.index') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('trial-balance.*') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm6 0V9a2 2 0 012-2h2a2 2 0 012 2v8a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            Trial Balance
                         </a>
                     </li>
                     <li>

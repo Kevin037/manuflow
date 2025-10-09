@@ -11,6 +11,7 @@ use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\TransactionProductionController;
 use App\Http\Controllers\SalesOrderController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\TrialBalanceController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,6 +57,19 @@ Route::middleware('auth')->group(function () {
     // Payment Routes
     Route::resource('payments', \App\Http\Controllers\PaymentController::class);
     Route::get('payments/{payment}/export', [\App\Http\Controllers\PaymentController::class, 'exportPdf'])->name('payments.export');
+
+    // General Ledger (Buku Besar)
+    Route::get('ledger', [\App\Http\Controllers\GeneralLedgerController::class, 'index'])->name('ledger.index');
+    Route::get('ledger/{account}', [\App\Http\Controllers\GeneralLedgerController::class, 'show'])->name('ledger.show');
+
+    // Chart of Account
+    Route::get('chart-of-account', [\App\Http\Controllers\ChartOfAccountController::class, 'index'])->name('chart.index');
+
+    // Journal Entries
+    Route::get('journal-entries', [\App\Http\Controllers\JournalEntryController::class, 'index'])->name('journals.index');
+
+    // Trial Balance
+    Route::get('trial-balance', [TrialBalanceController::class, 'index'])->name('trial-balance.index');
 });
 
 require __DIR__.'/auth.php';
