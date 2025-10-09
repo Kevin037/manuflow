@@ -56,4 +56,18 @@ class ReportController extends Controller
             'report' => $data,
         ]);
     }
+
+    /**
+     * API endpoint: GET /reports/monthly-growth
+     * Optional query: months (int, max 36)
+     */
+    public function monthlyGrowth(Request $request)
+    {
+        $validated = $request->validate([
+            'months' => ['nullable','integer','min:1','max:36'],
+        ]);
+        $months = (int) ($validated['months'] ?? 12);
+        $payload = $this->reportService->getMonthlySalesAndProfit($months);
+        return response()->json($payload);
+    }
 }

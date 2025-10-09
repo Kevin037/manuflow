@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit_loss');
     // Reports - Balance Sheet
     Route::get('reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance_sheet');
+    // Reports - Monthly Growth (JSON for dashboard)
+    Route::get('reports/monthly-growth', [ReportController::class, 'monthlyGrowth'])->name('reports.monthly_growth');
 });
 
 require __DIR__.'/auth.php';

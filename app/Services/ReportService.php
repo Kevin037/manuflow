@@ -263,4 +263,68 @@ class ReportService
     {
         return abs($a - $b) <= $epsilon;
     }
+
+    /**
+     * Get last N months Sales and Net Profit time series ending with current month.
+     * Returns array: ['labels'=>['Nov 2024',...], 'sales'=>[...], 'profit'=>[...], 'meta'=>['start_date'=>..., 'end_date'=>...]]
+     */
+    public function getMonthlySalesAndProfit(int $months = 12): array
+    {
+        // Clamp months to [1,36]
+        $months = max(1, min(36, (int) $months));
+
+        $now = Carbon::now();
+        $endMonth = $now->copy()->endOfMonth();
+        $startMonth = $now->copy()->subMonthsNoOverflow($months - 1)->startOfMonth();
+
+        $labels = [];
+        $salesSeries = [];
+        $profitSeries = [];
+
+        $cursor = $startMonth->copy();
+        while ($cursor->lessThanOrEqualTo($endMonth)) {
+            $monthStart = $cursor->copy()->startOfMonth();
+            $monthEnd = $cursor->copy()->endOfMonth();
+
+            // total_sales - prefer 'sales' table, fallback to 'orders'
+            $totalSales = 0.0;
+            if (Schema::hasTable('sales')) {
+                $totalSales = $this->sumTableInRange('sales', ['date','dt','created_at'], ['total_amount','total','amount','grand_total'], $monthStart, $monthEnd);
+            } elseif (Schema::hasTable('orders')) {
+                $totalSales = $this->sumTableInRange('orders', ['date','dt','created_at'], ['total_amount','total','grand_total'], $monthStart, $monthEnd);
+            }
+
+            // total_hpp - prefer 'purchases', fallback to 'purchase_orders'
+            $totalHpp = 0.0;
+            if (Schema::hasTable('purchases')) {
+                $totalHpp = $this->sumTableInRange('purchases', ['date','dt','created_at'], ['total_cost','amount','total','grand_total'], $monthStart, $monthEnd);
+            } elseif (Schema::hasTable('purchase_orders')) {
+                $totalHpp = $this->sumTableInRange('purchase_orders', ['date','dt','created_at'], ['total_cost','total','grand_total'], $monthStart, $monthEnd);
+            }
+
+            // total_expenses
+            $totalExpenses = 0.0;
+            if (Schema::hasTable('expenses')) {
+                $totalExpenses = $this->sumTableInRange('expenses', ['date','dt','created_at'], ['amount','total'], $monthStart, $monthEnd);
+            }
+
+            $netProfit = $totalSales - $totalHpp - $totalExpenses;
+
+            $labels[] = $monthStart->format('M Y');
+            $salesSeries[] = (float) round($totalSales, 2);
+            $profitSeries[] = (float) round($netProfit, 2);
+
+            $cursor->addMonthNoOverflow();
+        }
+
+        return [
+            'labels' => $labels,
+            'sales' => $salesSeries,
+            'profit' => $profitSeries,
+            'meta' => [
+                'start_date' => $startMonth->toDateString(),
+                'end_date' => $now->toDateString(),
+            ],
+        ];
+    }
 }

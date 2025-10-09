@@ -103,8 +103,15 @@
     </div>
 </div>
 
+<!-- Monthly Growth Chart -->
+<div class="mt-8">
+        @include('dashboard._monthly_growth')
+        <div class="h-72"></div>
+        <!-- Spacer to give chart some height for maintainAspectRatio false -->
+    </div>
+
 <!-- Content Grid -->
-<div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
+{{-- <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
     <!-- Recent Orders -->
     <x-card title="Recent Orders" subtitle="Latest customer orders in the system" class="shadow-md">
         <x-slot name="actions">
@@ -163,10 +170,10 @@
             </div>
         </div>
     </x-card>
-</div>
+</div> --}}
 
 <!-- Analytics Section -->
-<x-card title="Production Overview" subtitle="Monthly production and sales analytics" class="shadow-md">
+{{-- <x-card title="Production Overview" subtitle="Monthly production and sales analytics" class="shadow-md">
     <x-slot name="actions">
         <div class="flex items-center space-x-2">
             <select class="rounded-md border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
@@ -201,7 +208,7 @@
             </div>
         </div>
     </div>
-</x-card>
+</x-card> --}}
 
 <!-- Quick Actions -->
 <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
