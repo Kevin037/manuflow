@@ -12,6 +12,7 @@ use App\Http\Controllers\TransactionProductionController;
 use App\Http\Controllers\SalesOrderController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\TrialBalanceController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -70,6 +71,11 @@ Route::middleware('auth')->group(function () {
 
     // Trial Balance
     Route::get('trial-balance', [TrialBalanceController::class, 'index'])->name('trial-balance.index');
+
+    // Reports - Profit & Loss
+    Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit_loss');
+    // Reports - Balance Sheet
+    Route::get('reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance_sheet');
 });
 
 require __DIR__.'/auth.php';

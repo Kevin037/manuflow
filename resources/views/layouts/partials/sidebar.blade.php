@@ -6,7 +6,7 @@
         productionOpen: {{ request()->is('productions*') ? 'true' : 'false' }},
         purchasingOpen: {{ request()->is('purchasing*') || request()->is('purchase*') ? 'true' : 'false' }},
         salesOpen: {{ request()->is('sales*') || request()->is('orders*') || request()->is('invoices*') ? 'true' : 'false' }},
-    accountingOpen: {{ request()->is('accounting*') || request()->is('journal*') || request()->is('payments*') || request()->is('trial-balance*') ? 'true' : 'false' }},
+    accountingOpen: {{ request()->is('accounting*') || request()->is('journal*') || request()->is('payments*') || request()->is('trial-balance*') || request()->is('reports*') ? 'true' : 'false' }},
         reportsOpen: {{ request()->is('reports*') ? 'true' : 'false' }},
         
         toggleMenu(menu) {
@@ -324,24 +324,25 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700">
-                            Financial Reports
+                        <a href="{{ route('reports.profit_loss') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('reports.profit_loss') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 13h3V7H7v6zm5 4h3V7h-3v10zm5-2h3V7h-3v8z"/>
+                            </svg>
+                            Profit &amp; Loss
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('reports.balance_sheet') }}" class="flex items-center w-full p-2 text-gray-600 transition duration-200 rounded-lg pl-11 group hover:bg-primary-50 hover:text-primary-700 {{ request()->routeIs('reports.balance_sheet') ? 'bg-primary-100 text-primary-700 font-medium' : '' }}">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h10M4 14h16M4 18h10"/>
+                            </svg>
+                            Balance Sheet
+                        </a>
+                    </li>
+                    
                 </ul>
             </li>
             
-            <!-- Reports -->
-            <li>
-                <a href="#" class="flex items-center p-3 text-gray-900 rounded-xl hover:bg-gray-100 hover:text-primary-600 group transition-all duration-200">
-                    <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-200 group-hover:text-primary-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5 5V.13a2.96 2.96 0 0 0-1.293.749L.879 3.707A2.98 2.98 0 0 0 .13 5H5Z"/>
-                        <path d="M6.737 11.061a2.961 2.961 0 0 1 .81-1.515l6.117-6.116A4.839 4.839 0 0 1 16 2.141V2a1.97 1.97 0 0 0-1.933-2H7v5a2 2 0 0 1-2 2H0v11a1.969 1.969 0 0 0 1.933 2h12.134A1.97 1.97 0 0 0 16 18v-3.093l-1.546 1.546c-.413.413-.94.695-1.513.81l-3.4.679a2.947 2.947 0 0 1-1.85-.227 2.96 2.96 0 0 1-1.635-3.257l.681-3.397Z"/>
-                        <path d="M8.961 16a.93.93 0 0 0 .189-.019l3.4-.679a.961.961 0 0 0 .49-.263l6.118-6.117a2.884 2.884 0 0 0-4.079-4.078l-6.117 6.117a.96.96 0 0 0-.263.491l-.679 3.4A.961.961 0 0 0 8.961 16Zm7.477-9.8a.958.958 0 0 1 .68-.281.961.961 0 0 1 .682 1.644l-.315.315-1.36-1.36.313-.318Zm-5.911 5.911 4.236-4.236 1.359 1.359-4.236 4.237-1.7.339.341-1.699Z"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Reports</span>
-                </a>
-            </li>
         </ul>
         
         <!-- Sidebar Footer -->
