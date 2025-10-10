@@ -70,4 +70,25 @@ class ReportController extends Controller
         $payload = $this->reportService->getMonthlySalesAndProfit($months);
         return response()->json($payload);
     }
+
+    // Monthly Top Products: time series of total revenues
+    public function monthlyTopProducts(Request $request)
+    {
+        $validated = $request->validate([
+            'months' => ['nullable','integer','min:1','max:36'],
+        ]);
+        $months = (int) ($validated['months'] ?? 12);
+        $data = $this->reportService->getMonthlyTopProducts($months);
+        return response()->json($data);
+    }
+
+    // Drilldown: Top 5 products for selected month
+    public function monthlyTopProductsDrilldown(int $year, int $month, Request $request)
+    {
+        if ($month < 1 || $month > 12) {
+            return response()->json(['message' => 'Invalid month'], 422);
+        }
+        $data = $this->reportService->getTop5ProductsForMonth($year, $month);
+        return response()->json($data);
+    }
 }

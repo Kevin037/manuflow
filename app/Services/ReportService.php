@@ -327,4 +327,199 @@ class ReportService
             ],
         ];
     }
+
+    /**
+     * Monthly total revenue series for last N months ending current month.
+     * Returns: ['labels'=>['Nov 2024',...], 'revenues'=>[...], 'meta'=>['start_date','end_date']]
+     */
+    public function getMonthlyTopProducts(int $months = 12): array
+    {
+        $months = max(1, min(36, (int)$months));
+        $now = Carbon::now();
+        $endMonth = $now->copy()->endOfMonth();
+        $startMonth = $now->copy()->subMonthsNoOverflow($months - 1)->startOfMonth();
+
+        $labels = [];
+        $revenues = [];
+        $monthsMeta = [];
+
+        $cursor = $startMonth->copy();
+        while ($cursor->lessThanOrEqualTo($endMonth)) {
+            $mStart = $cursor->copy()->startOfMonth();
+            $mEnd = $cursor->copy()->endOfMonth();
+
+            $totalRevenue = 0.0;
+            if (Schema::hasTable('sales')) {
+                $totalRevenue = $this->sumTableInRange('sales', ['date','dt','created_at'], ['total_amount','total','amount','grand_total'], $mStart, $mEnd);
+            } elseif (Schema::hasTable('orders')) {
+                $totalRevenue = $this->sumTableInRange('orders', ['date','dt','created_at'], ['total_amount','total','grand_total'], $mStart, $mEnd);
+            }
+
+            $labels[] = $mStart->format('M Y');
+            $revenues[] = (float) round($totalRevenue, 2);
+            $monthsMeta[] = [
+                'year' => (int) $mStart->year,
+                'month' => (int) $mStart->month,
+            ];
+
+            $cursor->addMonthNoOverflow();
+        }
+
+        return [
+            'labels' => $labels,
+            'months' => $monthsMeta,
+            'revenues' => $revenues,
+            'meta' => [
+                'start_date' => $startMonth->toDateString(),
+                'end_date' => $now->toDateString(),
+            ],
+        ];
+    }
+
+    /**
+     * Strict Top-5 products for a specific month with percent of month revenue.
+     * Returns: ['year','month','label','total_month_revenue','top_products'=>[{rank,product_id,product_name,revenue,percent}]]
+     */
+    public function getTop5ProductsForMonth(int $year, int $month): array
+    {
+        $start = Carbon::create($year, $month, 1)->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+        $label = $start->format('M Y');
+
+        $hasSales = Schema::hasTable('sales');
+        $hasOrders = Schema::hasTable('orders');
+        $salesTable = $hasSales ? 'sales' : ($hasOrders ? 'orders' : null);
+        if (!$salesTable) {
+            return [
+                'year' => (int)$year,
+                'month' => (int)$month,
+                'label' => $label,
+                'total_month_revenue' => 0.0,
+                'top_products' => [],
+            ];
+        }
+
+        $salesDateCol = $this->firstExistingColumn($salesTable, ['date','dt','created_at']);
+
+        $hasSaleItems = Schema::hasTable('sale_items');
+        $hasOrderDetails = Schema::hasTable('order_details');
+        $itemsTable = $hasSaleItems ? 'sale_items' : ($hasOrderDetails ? 'order_details' : null);
+
+        $topProducts = [];
+        $totalMonthRevenue = 0.0;
+
+        if ($itemsTable) {
+            $fkSaleCol = $itemsTable === 'sale_items' ? 'sale_id' : 'order_id';
+            $productIdCol = Schema::hasColumn($itemsTable, 'product_id') ? 'product_id' : null;
+            $productNameCol = Schema::hasColumn($itemsTable, 'product_name') ? 'product_name' : null;
+            $hasProducts = Schema::hasTable('products');
+            $productsHavePrice = $hasProducts && Schema::hasColumn('products', 'price');
+
+            // Determine revenue expression
+            $revenueCol = null;
+            foreach (['subtotal','total','amount'] as $cand) {
+                if (Schema::hasColumn($itemsTable, $cand)) { $revenueCol = $cand; break; }
+            }
+            $qtyCol = Schema::hasColumn($itemsTable, 'qty') ? 'qty' : (Schema::hasColumn($itemsTable, 'quantity') ? 'quantity' : null);
+            $priceCol = Schema::hasColumn($itemsTable, 'price') ? 'price' : (Schema::hasColumn($itemsTable, 'unit_price') ? 'unit_price' : null);
+
+            // Total month revenue from items scope (more accurate)
+            if ($revenueCol) {
+                $totalMonthRevenue = (float) DB::table($itemsTable.' as i')
+                    ->join($salesTable.' as s', 's.id', '=', 'i.'.$fkSaleCol)
+                    ->whereBetween('s.'.$salesDateCol, [$start, $end])
+                    ->sum('i.'.$revenueCol);
+            } elseif ($qtyCol && $priceCol) {
+                $totalMonthRevenue = (float) DB::table($itemsTable.' as i')
+                    ->join($salesTable.' as s', 's.id', '=', 'i.'.$fkSaleCol)
+                    ->whereBetween('s.'.$salesDateCol, [$start, $end])
+                    ->selectRaw('SUM(i.'.$qtyCol.' * i.'.$priceCol.') as rev')
+                    ->value('rev');
+            } elseif ($qtyCol && $productsHavePrice && $productIdCol) {
+                // Use product price when item price is not stored
+                $totalMonthRevenue = (float) DB::table($itemsTable.' as i')
+                    ->join($salesTable.' as s', 's.id', '=', 'i.'.$fkSaleCol)
+                    ->join('products as p', 'p.id', '=', 'i.'.$productIdCol)
+                    ->whereBetween('s.'.$salesDateCol, [$start, $end])
+                    ->selectRaw('SUM(i.'.$qtyCol.' * p.price) as rev')
+                    ->value('rev');
+            }
+
+            // Build top-5 per product
+            $query = DB::table($itemsTable.' as i')
+                ->join($salesTable.' as s', 's.id', '=', 'i.'.$fkSaleCol)
+                ->when($productIdCol && $hasProducts, function($q) use ($productIdCol){
+                    return $q->join('products as p', 'p.id', '=', 'i.'.$productIdCol);
+                })
+                ->whereBetween('s.'.$salesDateCol, [$start, $end]);
+
+            $selects = [];
+            if ($productIdCol) { $selects[] = 'i.'.$productIdCol.' as product_id'; }
+            if ($productNameCol) {
+                $selects[] = 'i.'.$productNameCol.' as product_name';
+            } elseif ($hasProducts && $productIdCol) {
+                $selects[] = 'p.name as product_name';
+            } else {
+                $selects[] = DB::raw("CONCAT('Product ', COALESCE(i.".($productIdCol ?: 'id').", '')) as product_name");
+            }
+            if ($revenueCol) {
+                $selects[] = DB::raw('SUM(i.'.$revenueCol.') as revenue');
+            } elseif ($qtyCol && $priceCol) {
+                $selects[] = DB::raw('SUM(i.'.$qtyCol.' * i.'.$priceCol.') as revenue');
+            } elseif ($qtyCol && $productsHavePrice && $productIdCol) {
+                $selects[] = DB::raw('SUM(i.'.$qtyCol.' * p.price) as revenue');
+            } else {
+                $selects[] = DB::raw('SUM(0) as revenue');
+            }
+
+            // Determine proper GROUP BY columns (avoid grouping by revenue aggregate)
+            $groupByCols = [];
+            if ($productIdCol) {
+                $groupByCols[] = 'i.'.$productIdCol;
+            }
+            if ($productNameCol) {
+                $groupByCols[] = 'i.'.$productNameCol;
+            } elseif ($hasProducts && $productIdCol) {
+                $groupByCols[] = 'p.name';
+            } else {
+                // Must match the raw expression used for product_name select
+                $groupByCols[] = DB::raw("CONCAT('Product ', COALESCE(i.".($productIdCol ?: 'id').", ''))");
+            }
+
+            $rows = $query->select($selects)
+                ->groupBy($groupByCols)
+                ->orderByDesc('revenue')
+                ->limit(5)
+                ->get();
+
+            $rank = 1;
+            foreach ($rows as $r) {
+                $rev = (float) round($r->revenue ?? 0, 2);
+                $pct = $totalMonthRevenue > 0 ? round(($rev / $totalMonthRevenue) * 100, 2) : 0.0;
+                $topProducts[] = [
+                    'rank' => $rank++,
+                    'product_id' => isset($r->product_id) ? (int)$r->product_id : null,
+                    'product_name' => (string) $r->product_name,
+                    'revenue' => $rev,
+                    'percent' => $pct,
+                ];
+            }
+        }
+
+        // Fallback total revenue if items are not available or revenue was zero
+        if ($totalMonthRevenue <= 0.0) {
+            $totalMonthRevenue = 0.0;
+            if ($salesTable) {
+                $totalMonthRevenue = (float) $this->sumTableInRange($salesTable, ['date','dt','created_at'], ['total_amount','total','amount','grand_total'], $start, $end);
+            }
+        }
+
+        return [
+            'year' => (int)$year,
+            'month' => (int)$month,
+            'label' => $label,
+            'total_month_revenue' => (float) round($totalMonthRevenue, 2),
+            'top_products' => $topProducts,
+        ];
+    }
 }

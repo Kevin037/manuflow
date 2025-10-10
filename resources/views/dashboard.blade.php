@@ -110,6 +110,12 @@
         <!-- Spacer to give chart some height for maintainAspectRatio false -->
     </div>
 
+<!-- Top Products: Monthly Revenue + Drilldown -->
+<div class="mt-8">
+    @include('dashboard._monthly_top_products')
+    <div class="h-72"></div>
+</div>
+
 <!-- Content Grid -->
 {{-- <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
     <!-- Recent Orders -->
@@ -248,7 +254,7 @@
                 </svg>
                 <div class="ml-3">
                     <h3 class="text-lg font-medium">New Order</h3>
-                    <p class="text-blue-100">Create customer order</p>
+                    <p class="text-blue-100">Create Order</p>
                 </div>
             </div>
         </div>

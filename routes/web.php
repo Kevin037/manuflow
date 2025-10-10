@@ -78,6 +78,9 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance_sheet');
     // Reports - Monthly Growth (JSON for dashboard)
     Route::get('reports/monthly-growth', [ReportController::class, 'monthlyGrowth'])->name('reports.monthly_growth');
+    // Reports - Monthly Top Products (JSON series + drilldown)
+    Route::get('reports/monthly-top-products', [ReportController::class, 'monthlyTopProducts'])->name('reports.monthly_top_products');
+    Route::get('reports/monthly-top-products/{year}/{month}', [ReportController::class, 'monthlyTopProductsDrilldown'])->name('reports.monthly_top_products.drilldown');
 });
 
 require __DIR__.'/auth.php';
