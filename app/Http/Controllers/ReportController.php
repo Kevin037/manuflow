@@ -91,4 +91,11 @@ class ReportController extends Controller
         $data = $this->reportService->getTop5ProductsForMonth($year, $month);
         return response()->json($data);
     }
+
+    // Monthly Summary (JSON for dashboard cards)
+    public function monthlySummary(Request $request)
+    {
+        $payload = $this->reportService->getMonthlySummary();
+        return response()->json($payload);
+    }
 }

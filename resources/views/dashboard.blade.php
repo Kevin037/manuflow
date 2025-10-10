@@ -105,6 +105,7 @@
 
 <!-- Monthly Growth Chart -->
 <div class="mt-8">
+    @include('dashboard._monthly_summary_cards')
         @include('dashboard._monthly_growth')
         <div class="h-72"></div>
         <!-- Spacer to give chart some height for maintainAspectRatio false -->

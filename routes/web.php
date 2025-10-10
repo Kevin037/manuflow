@@ -81,6 +81,8 @@ Route::middleware('auth')->group(function () {
     // Reports - Monthly Top Products (JSON series + drilldown)
     Route::get('reports/monthly-top-products', [ReportController::class, 'monthlyTopProducts'])->name('reports.monthly_top_products');
     Route::get('reports/monthly-top-products/{year}/{month}', [ReportController::class, 'monthlyTopProductsDrilldown'])->name('reports.monthly_top_products.drilldown');
+    // Reports - Monthly Summary (JSON for dashboard cards)
+    Route::get('reports/monthly-summary', [ReportController::class, 'monthlySummary'])->name('reports.monthly_summary');
 });
 
 require __DIR__.'/auth.php';

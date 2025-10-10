@@ -265,6 +265,108 @@ class ReportService
     }
 
     /**
+     * Monthly summary KPIs for current month vs previous month.
+     * Returns structure:
+     * [
+     *   'as_of' => 'YYYY-MM-DD', // start of current month
+     *   'current_period' => ['start' => 'YYYY-MM-DD', 'end' => 'YYYY-MM-DD'],
+     *   'metrics' => [
+     *     'total_revenue' => ['current' => float, 'previous' => float, 'percent_change' => ?float, 'baseline_zero' => bool],
+     *     'total_purchase_orders_count' => ['current' => int, 'previous' => int, 'percent_change' => ?float, 'baseline_zero' => bool],
+     *     'total_net_profit' => ['current' => float, 'previous' => float, 'percent_change' => ?float, 'baseline_zero' => bool],
+     *   ],
+     * ]
+     */
+    public function getMonthlySummary(?Carbon $asOf = null): array
+    {
+        $asOf = $asOf ? $asOf->copy() : Carbon::now();
+        $currentStart = $asOf->copy()->startOfMonth();
+        $currentEnd = $asOf->copy()->endOfMonth();
+        $previousStart = $currentStart->copy()->subMonthNoOverflow()->startOfMonth();
+        $previousEnd = $currentStart->copy()->subMonthNoOverflow()->endOfMonth();
+
+        // Revenue (prefer 'sales', fallback 'orders')
+        $revCols = ['total_amount','total','amount','grand_total'];
+        $dateCols = ['date','dt','created_at'];
+
+        $revenueTable = null;
+        if (Schema::hasTable('sales')) {
+            $revenueTable = 'sales';
+        } elseif (Schema::hasTable('orders')) {
+            $revenueTable = 'orders';
+        }
+        $totalRevenueCurrent = 0.0;
+        $totalRevenuePrevious = 0.0;
+        if ($revenueTable) {
+            $totalRevenueCurrent = (float) $this->sumTableInRange($revenueTable, $dateCols, $revCols, $currentStart, $currentEnd);
+            $totalRevenuePrevious = (float) $this->sumTableInRange($revenueTable, $dateCols, $revCols, $previousStart, $previousEnd);
+        }
+
+        // Purchase orders total amount (prefer 'purchases', fallback 'purchase_orders')
+        $poTable = null;
+        if (Schema::hasTable('purchases')) {
+            $poTable = 'purchases';
+        } elseif (Schema::hasTable('purchase_orders')) {
+            $poTable = 'purchase_orders';
+        }
+        $poTotalCurrent = 0.0;
+        $poTotalPrevious = 0.0;
+        if ($poTable) {
+            // Prioritize 'total', then common fallbacks
+            $poAmountCols = ['total','total_amount','amount','grand_total','total_cost'];
+            $poTotalCurrent = (float) $this->sumTableInRange($poTable, $dateCols, $poAmountCols, $currentStart, $currentEnd);
+            $poTotalPrevious = (float) $this->sumTableInRange($poTable, $dateCols, $poAmountCols, $previousStart, $previousEnd);
+        }
+
+        // Net profit using existing P&L logic
+        $plCurrent = $this->calculateProfitLoss($currentStart->toDateString(), $currentEnd->toDateString());
+        $plPrevious = $this->calculateProfitLoss($previousStart->toDateString(), $previousEnd->toDateString());
+        $netProfitCurrent = (float) ($plCurrent['net_profit'] ?? 0.0);
+        $netProfitPrevious = (float) ($plPrevious['net_profit'] ?? 0.0);
+
+        // Percent change helper
+        $pct = function(float $current, float $previous): array {
+            if (abs($previous) < 1e-9) {
+                return ['percent' => null, 'baseline_zero' => true];
+            }
+            $percent = (($current - $previous) / abs($previous)) * 100.0;
+            return ['percent' => round($percent, 2), 'baseline_zero' => false];
+        };
+
+        $revPct = $pct($totalRevenueCurrent, $totalRevenuePrevious);
+    $poPct = $pct($poTotalCurrent, $poTotalPrevious);
+        $npPct = $pct($netProfitCurrent, $netProfitPrevious);
+
+        return [
+            'as_of' => $currentStart->toDateString(),
+            'current_period' => [
+                'start' => $currentStart->toDateString(),
+                'end' => $currentEnd->toDateString(),
+            ],
+            'metrics' => [
+                'total_revenue' => [
+                    'current' => (float) round($totalRevenueCurrent, 2),
+                    'previous' => (float) round($totalRevenuePrevious, 2),
+                    'percent_change' => $revPct['percent'],
+                    'baseline_zero' => $revPct['baseline_zero'],
+                ],
+                'total_purchase_orders' => [
+                    'current' => (float) round($poTotalCurrent, 2),
+                    'previous' => (float) round($poTotalPrevious, 2),
+                    'percent_change' => $poPct['percent'],
+                    'baseline_zero' => $poPct['baseline_zero'],
+                ],
+                'total_net_profit' => [
+                    'current' => (float) round($netProfitCurrent, 2),
+                    'previous' => (float) round($netProfitPrevious, 2),
+                    'percent_change' => $npPct['percent'],
+                    'baseline_zero' => $npPct['baseline_zero'],
+                ],
+            ],
+        ];
+    }
+
+    /**
      * Get last N months Sales and Net Profit time series ending with current month.
      * Returns array: ['labels'=>['Nov 2024',...], 'sales'=>[...], 'profit'=>[...], 'meta'=>['start_date'=>..., 'end_date'=>...]]
      */
