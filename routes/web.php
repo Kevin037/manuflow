@@ -31,11 +31,16 @@ Route::middleware('auth')->group(function () {
     
     // Master Data Routes
     Route::resource('users', UserController::class);
+    Route::get('users/export/excel', [UserController::class, 'exportExcel'])->name('users.export.excel');
     Route::resource('customers', CustomerController::class);
+    Route::get('customers/export/excel', [CustomerController::class, 'exportExcel'])->name('customers.export.excel');
     Route::resource('materials', MaterialController::class);
+    Route::get('materials/export/excel', [MaterialController::class, 'exportExcel'])->name('materials.export.excel');
     Route::resource('suppliers', SupplierController::class);
+    Route::get('suppliers/export/excel', [SupplierController::class, 'exportExcel'])->name('suppliers.export.excel');
     Route::resource('formulas', FormulaController::class);
     Route::resource('products', ProductController::class);
+    Route::get('products/export/excel', [ProductController::class, 'exportExcel'])->name('products.export.excel');
     
     // Transaction Routes
     Route::resource('purchase-orders', PurchaseOrderController::class);

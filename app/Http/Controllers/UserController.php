@@ -8,16 +8,18 @@ use App\Http\Requests\UserUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 
 class UserController extends Controller
 {
+    use ExportsDataTable;
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $users = User::select(['id', 'name', 'email', 'photo', 'created_at']);
+            $users = $this->applyDateFilters(User::select(['id', 'name', 'email', 'photo', 'created_at']), $request);
             
             return DataTables::of($users)
                 ->editColumn('photo', function($user) {
@@ -33,6 +35,37 @@ class UserController extends Controller
         }
 
         return view('master-data.users.index');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $query = $this->applyDateFilters(User::select(['id', 'name', 'email', 'photo', 'created_at']), $request);
+        
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        $rows = $query->orderBy('id')->get()->map(function($u) {
+            return [
+                'photo' => $u->photo ? storage_path('app/public/' . $u->photo) : null,
+                'name' => $u->name,
+                'email' => $u->email,
+                'joined' => $u->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
+
+        $headings = [
+            'photo' => 'Photo',
+            'name' => 'Name',
+            'email' => 'Email',
+            'joined' => 'Joined',
+        ];
+
+        return $this->exportWithImages($rows, $headings, 'photo', 'users_export');
     }
 
     /**
