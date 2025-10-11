@@ -45,24 +45,29 @@ Route::middleware('auth')->group(function () {
     
     // Transaction Routes
     Route::resource('purchase-orders', PurchaseOrderController::class);
+    Route::get('purchase-orders/export/excel', [PurchaseOrderController::class, 'exportExcel'])->name('purchase-orders.export.excel');
     Route::post('purchase-orders/{purchaseOrder}/complete', [PurchaseOrderController::class, 'complete'])->name('purchase-orders.complete');
     
     // Production Routes
     Route::resource('productions', TransactionProductionController::class);
+    Route::get('productions/export/excel', [TransactionProductionController::class, 'exportExcel'])->name('productions.export.excel');
     Route::post('productions/{production}/complete', [TransactionProductionController::class, 'complete'])->name('productions.complete');
     Route::post('productions/check-material-stock', [TransactionProductionController::class, 'checkMaterialStock'])->name('productions.check-material-stock');
     
     // Sales Order Routes
     Route::resource('sales-orders', SalesOrderController::class);
+    Route::get('sales-orders/export/excel', [SalesOrderController::class, 'exportExcel'])->name('sales-orders.export.excel');
     Route::post('sales-orders/{order}/complete', [SalesOrderController::class, 'complete'])->name('sales-orders.complete');
     Route::post('sales-orders/check-stock', [SalesOrderController::class, 'checkStock'])->name('sales-orders.check-stock');
 
     // Invoice Routes
     Route::resource('invoices', InvoiceController::class);
+    Route::get('invoices/export/excel', [InvoiceController::class, 'exportExcel'])->name('invoices.export.excel');
     Route::get('invoices/{invoice}/export', [InvoiceController::class, 'exportPdf'])->name('invoices.export');
 
     // Payment Routes
     Route::resource('payments', \App\Http\Controllers\PaymentController::class);
+    Route::get('payments/export/excel', [\App\Http\Controllers\PaymentController::class, 'exportExcel'])->name('payments.export.excel');
     Route::get('payments/{payment}/export', [\App\Http\Controllers\PaymentController::class, 'exportPdf'])->name('payments.export');
 
     // General Ledger (Buku Besar)

@@ -8,6 +8,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDetail;
 use App\Models\Supplier;
 use App\Models\Material;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ use App\Services\AccountingService;
 
 class PurchaseOrderController extends Controller
 {
+    use ExportsDataTable;
     /**
      * Display a listing of the resource.
      */
@@ -48,6 +50,44 @@ class PurchaseOrderController extends Controller
         }
 
         return view('transactions.purchase-orders.index');
+    }
+
+    /**
+     * Export purchase orders to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $purchaseOrders = PurchaseOrder::with('supplier')->select(['id', 'no', 'dt', 'total', 'status', 'supplier_id', 'created_at']);
+        
+        // Apply date filters
+        $purchaseOrders = $this->applyDateFilters($purchaseOrders, $request, 'dt');
+        
+        // Apply status filter
+        if ($request->filled('status')) {
+            $purchaseOrders->where('status', $request->status);
+        }
+        
+        $data = $purchaseOrders->get()->map(function($purchaseOrder) {
+            return [
+                'no' => $purchaseOrder->no,
+                'supplier_name' => $purchaseOrder->supplier ? $purchaseOrder->supplier->name : '-',
+                'dt' => $purchaseOrder->dt->format('Y-m-d'),
+                'total' => $purchaseOrder->total,
+                'status' => ucfirst($purchaseOrder->status),
+                'created_at' => $purchaseOrder->created_at->format('Y-m-d H:i:s'),
+            ];
+        })->toArray();
+        
+        $headers = [
+            'no' => 'Purchase Order No',
+            'supplier_name' => 'Supplier',
+            'dt' => 'Date',
+            'total' => 'Total',
+            'status' => 'Status',
+            'created_at' => 'Created At'
+        ];
+        
+        return $this->exportWithImages($data, $headers, 'purchase-orders');
     }
 
     /**

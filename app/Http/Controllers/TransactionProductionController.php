@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Production;
 use App\Models\Product;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\AccountingService;
@@ -11,6 +12,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class TransactionProductionController extends Controller
 {
+    use ExportsDataTable;
     /**
      * Display a listing of the resource.
      */
@@ -79,6 +81,44 @@ class TransactionProductionController extends Controller
         }
 
         return view('transactions.productions.index');
+    }
+
+    /**
+     * Export production orders to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $productions = Production::with('product')->select(['id', 'no', 'dt', 'qty', 'status', 'product_id', 'created_at']);
+        
+        // Apply date filters
+        $productions = $this->applyDateFilters($productions, $request, 'dt');
+        
+        // Apply status filter
+        if ($request->filled('status')) {
+            $productions->where('status', $request->status);
+        }
+        
+        $data = $productions->get()->map(function($production) {
+            return [
+                'no' => $production->no,
+                'product_name' => $production->product ? $production->product->name : '-',
+                'dt' => $production->dt->format('Y-m-d'),
+                'qty' => $production->qty,
+                'status' => ucfirst($production->status),
+                'created_at' => $production->created_at->format('Y-m-d H:i:s'),
+            ];
+        })->toArray();
+        
+        $headers = [
+            'no' => 'Production No',
+            'product_name' => 'Product',
+            'dt' => 'Date',
+            'qty' => 'Quantity',
+            'status' => 'Status',
+            'created_at' => 'Created At'
+        ];
+        
+        return $this->exportWithImages($data, $headers, 'production-orders');
     }
 
     /**

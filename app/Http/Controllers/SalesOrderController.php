@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use Illuminate\Http\Request;
 use App\Services\AccountingService;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class SalesOrderController extends Controller
 {
+    use ExportsDataTable;
     /**
      * Display a listing of the resource.
      */
@@ -89,6 +91,50 @@ class SalesOrderController extends Controller
         }
 
         return view('transactions.sales-orders.index');
+    }
+
+    /**
+     * Export sales orders to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $orders = Order::with(['customer', 'orderDetails.product'])->select(['id', 'no', 'dt', 'total', 'status', 'customer_id', 'created_at']);
+        
+        // Apply date filters
+        $orders = $this->applyDateFilters($orders, $request, 'dt');
+        
+        // Apply status filter
+        if ($request->filled('status')) {
+            $orders->where('status', $request->status);
+        }
+        
+        $data = $orders->get()->map(function($order) {
+            $productQuantity = $order->orderDetails->map(function ($detail) {
+                return $detail->product->name . ' (' . number_format($detail->qty, 0) . ')';
+            })->implode(', ');
+            
+            return [
+                'no' => $order->no,
+                'customer_name' => $order->customer ? $order->customer->name : 'No customer',
+                'dt' => $order->dt->format('Y-m-d'),
+                'product_quantity' => $productQuantity ?: '-',
+                'total' => $order->total,
+                'status' => ucfirst($order->status),
+                'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+            ];
+        })->toArray();
+        
+        $headers = [
+            'no' => 'Sales Order No',
+            'customer_name' => 'Customer',
+            'dt' => 'Date',
+            'product_quantity' => 'Products & Quantities',
+            'total' => 'Total',
+            'status' => 'Status',
+            'created_at' => 'Created At'
+        ];
+        
+        return $this->exportWithImages($data, $headers, 'sales-orders');
     }
 
     /**

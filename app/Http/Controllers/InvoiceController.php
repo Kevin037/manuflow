@@ -6,6 +6,7 @@ use App\Http\Requests\InvoiceStoreRequest;
 use App\Http\Requests\InvoiceUpdateRequest;
 use App\Models\Invoice;
 use App\Models\Order;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -14,6 +15,7 @@ use App\Services\AccountingService;
 
 class InvoiceController extends Controller
 {
+    use ExportsDataTable;
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -41,6 +43,44 @@ class InvoiceController extends Controller
                 ->make(true);
         }
         return view('transactions.invoices.index');
+    }
+
+    /**
+     * Export invoices to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $invoices = Invoice::with(['order.customer','payments'])->select(['id', 'no', 'dt', 'status', 'order_id', 'created_at']);
+        
+        // Apply date filters
+        $invoices = $this->applyDateFilters($invoices, $request, 'dt');
+        
+        // Apply status filter
+        if ($request->filled('status')) {
+            $invoices->where('status', $request->status);
+        }
+        
+        $data = $invoices->get()->map(function($invoice) {
+            return [
+                'no' => $invoice->no,
+                'dt' => $invoice->dt->format('Y-m-d'),
+                'order_no' => $invoice->order ? $invoice->order->no : '-',
+                'total_formatted' => 'Rp ' . number_format($invoice->order ? $invoice->order->total : 0, 0, ',', '.'),
+                'status' => ucfirst($invoice->status),
+                'created_at' => $invoice->created_at->format('Y-m-d H:i:s'),
+            ];
+        })->toArray();
+        
+        $headers = [
+            'no' => 'Invoice No',
+            'dt' => 'Date',
+            'order_no' => 'Order No',
+            'total_formatted' => 'Total',
+            'status' => 'Status',
+            'created_at' => 'Created At'
+        ];
+        
+        return $this->exportWithImages($data, $headers, 'invoices');
     }
 
     public function create()

@@ -7,6 +7,7 @@ use App\Http\Requests\PaymentUpdateRequest;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use App\Services\AccountingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentController extends Controller
 {
+    use ExportsDataTable;
     public function index(Request $request)
     {
         if($request->ajax()){
@@ -31,6 +33,44 @@ class PaymentController extends Controller
                 ->make(true);
         }
         return view('transactions.payments.index');
+    }
+
+    /**
+     * Export payments to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $payments = Payment::with('invoice')->select(['id', 'no', 'paid_at', 'amount', 'payment_type', 'invoice_id', 'created_at']);
+        
+        // Apply date filters
+        $payments = $this->applyDateFilters($payments, $request, 'paid_at');
+        
+        // Apply payment type filter
+        if ($request->filled('payment_type')) {
+            $payments->where('payment_type', $request->payment_type);
+        }
+        
+        $data = $payments->get()->map(function($payment) {
+            return [
+                'no' => $payment->no,
+                'paid_at' => $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '-',
+                'invoice_no' => $payment->invoice ? $payment->invoice->no : '-',
+                'payment_type' => ucfirst(str_replace('_', ' ', $payment->payment_type)),
+                'amount_formatted' => 'Rp ' . number_format($payment->amount, 0, ',', '.'),
+                'created_at' => $payment->created_at->format('Y-m-d H:i:s'),
+            ];
+        })->toArray();
+        
+        $headers = [
+            'no' => 'Payment No',
+            'paid_at' => 'Paid At',
+            'invoice_no' => 'Invoice No',
+            'payment_type' => 'Payment Type',
+            'amount_formatted' => 'Amount',
+            'created_at' => 'Created At'
+        ];
+        
+        return $this->exportWithImages($data, $headers, 'payments');
     }
 
     public function create()
