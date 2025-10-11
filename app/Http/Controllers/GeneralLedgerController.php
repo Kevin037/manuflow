@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\JournalEntry;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use Illuminate\Http\Request;
 
 class GeneralLedgerController extends Controller
 {
+    use ExportsDataTable;
     public function index(Request $request)
     {
         $defaultStart = now()->subMonth()->toDateString();
@@ -47,5 +49,30 @@ class GeneralLedgerController extends Controller
         $totalBalance = $totalDebit - $totalCredit;
 
         return view('accounting.ledger.show', compact('account','entries','dt_start','dt_end','totalDebit','totalCredit','totalBalance'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $defaultStart = now()->subMonth()->toDateString();
+        $defaultEnd = now()->toDateString();
+        $dt_start = $request->get('dt_start', $defaultStart);
+        $dt_end = $request->get('dt_end', $defaultEnd);
+
+        // Export the same list shown on the index view (accounts list)
+        $accounts = Account::whereNotNull('parent_id')
+            ->orderBy('id','asc')
+            ->get(['code','name']);
+
+        $rows = $accounts->map(function($acc){
+            return [
+                'code' => $acc->code,
+                'name' => $acc->name,
+            ];
+        })->toArray();
+
+        return $this->exportWithImages($rows, [
+            'code' => 'Account Code',
+            'name' => 'Account Name',
+        ], null, 'general_ledger');
     }
 }

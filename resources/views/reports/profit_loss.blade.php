@@ -18,6 +18,13 @@
           <input type="date" name="end_date" value="{{ $end_date }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
         </div>
         <button class="inline-flex items-center rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-500">Generate</button>
+        <a href="{{ route('reports.profit-loss.export.excel') }}?start_date={{ $start_date }}&end_date={{ $end_date }}" 
+           class="inline-flex items-center gap-x-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-all duration-200">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          Export Excel
+        </a>
       </form>
     </div>
     @if($errors->any())

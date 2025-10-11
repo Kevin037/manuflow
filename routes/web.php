@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
 
     // General Ledger (Buku Besar)
     Route::get('ledger', [\App\Http\Controllers\GeneralLedgerController::class, 'index'])->name('ledger.index');
+    Route::get('ledger/export/excel', [\App\Http\Controllers\GeneralLedgerController::class, 'exportExcel'])->name('ledger.export.excel');
     Route::get('ledger/{account}', [\App\Http\Controllers\GeneralLedgerController::class, 'show'])->name('ledger.show');
 
     // Chart of Account
@@ -79,14 +80,18 @@ Route::middleware('auth')->group(function () {
 
     // Journal Entries
     Route::get('journal-entries', [\App\Http\Controllers\JournalEntryController::class, 'index'])->name('journals.index');
+    Route::get('journal-entries/export/excel', [\App\Http\Controllers\JournalEntryController::class, 'exportExcel'])->name('journals.export.excel');
 
     // Trial Balance
     Route::get('trial-balance', [TrialBalanceController::class, 'index'])->name('trial-balance.index');
+    Route::get('trial-balance/export/excel', [TrialBalanceController::class, 'exportExcel'])->name('trial-balance.export.excel');
 
     // Reports - Profit & Loss
     Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit_loss');
+    Route::get('reports/profit-loss/export/excel', [ReportController::class, 'exportProfitLoss'])->name('reports.profit-loss.export.excel');
     // Reports - Balance Sheet
     Route::get('reports/balance-sheet', [ReportController::class, 'balanceSheet'])->name('reports.balance_sheet');
+    Route::get('reports/balance-sheet/export/excel', [ReportController::class, 'exportBalanceSheet'])->name('reports.balance-sheet.export.excel');
     // Reports - Monthly Growth (JSON for dashboard)
     Route::get('reports/monthly-growth', [ReportController::class, 'monthlyGrowth'])->name('reports.monthly_growth');
     // Reports - Monthly Top Products (JSON series + drilldown)
