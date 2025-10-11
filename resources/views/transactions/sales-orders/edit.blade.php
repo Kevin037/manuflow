@@ -47,7 +47,7 @@
                     </div>
                     <div>
                         <label for="customer_id" class="block text-sm font-semibold text-gray-700 mb-2">Customer *</label>
-                        <select name="customer_id" id="customer_id" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_id') border-red-500 ring-2 ring-red-200 @enderror">
+                        <select name="customer_id" id="customer_id" class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_id') border-red-500 ring-2 ring-red-200 @enderror" style="width: 100%;">
                             <option value="">Select Customer</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customer_id', $order->customer_id) == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
@@ -100,7 +100,7 @@
     </form>
 </div>
 @endsection
-
+{{-- // tesselect2 --}}
 @push('scripts')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -119,7 +119,7 @@
             const existingQty = existingDetail ? existingDetail.qty : '';
             row.innerHTML = `
                 <td class="px-6 py-4">
-                    <select class="product-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" name="products[${currentIndex}][product_id]" required>
+                    <select class="select2 product-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" style="width: 100%;" name="products[${currentIndex}][product_id]" required>
                         <option value="">Select Product</option>
                         ${productsData.map(p => `<option value="${p.id}" data-stock="${p.qty}" data-unit="${p.unit}" ${selectedProductId == p.id ? 'selected' : ''}>${p.name} (${p.sku})</option>`).join('')}
                     </select>
@@ -132,36 +132,181 @@
             tbody.appendChild(row); rowIndex++;
             const productSelect = row.querySelector('.product-select');
             const qtyInput = row.querySelector('.qty-input');
-            productSelect.addEventListener('change', function() { updateProductStock(this, row); });
+            // Bind events and initialize Select2
+            bindProductEvents(productSelect, row);
+            initSelect2(productSelect, row);
+            // Quantity validators
             qtyInput.addEventListener('input', function() { validateQuantityRealTime(this); });
             qtyInput.addEventListener('blur', function() { validateQuantity(this); });
+            // Initialize stock/unit for preselected rows
             if (existingDetail && selectedProductId) { updateProductStock(productSelect, row, true); }
         }
         function updateProductStock(selectElement, row, isInit = false) {
-            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const value = (selectElement && typeof selectElement.value !== 'undefined') ? String(selectElement.value) : '';
             const stockDisplay = row.querySelector('.stock-display');
             const unitDisplay = row.querySelector('.unit-display');
             const qtyInput = row.querySelector('.qty-input');
-            if (selectedOption && selectedOption.value) {
-                const allSelects = document.querySelectorAll('.product-select');
-                let duplicate = false; allSelects.forEach(sel => { if (sel !== selectElement && sel.value === selectedOption.value) duplicate = true; });
-                if (duplicate && !isInit) { Swal.fire({ title: 'Product Duplicate', text: 'This product is already selected in another row.', icon: 'warning', confirmButtonColor: '#f59e0b' }); selectElement.value=''; resetStockDisplay(stockDisplay, unitDisplay, qtyInput); return; }
-                const baseStock = parseFloat(selectedOption.dataset.stock) || 0;
-                const originalQty = parseFloat(qtyInput.getAttribute('data-original-qty')) || 0;
-                const availableStock = baseStock + originalQty;
-                const unit = selectedOption.dataset.unit || 'pcs';
-                updateStockDisplay(stockDisplay, availableStock);
-                unitDisplay.textContent = unit;
-                qtyInput.setAttribute('data-stock', availableStock);
-                if (!isInit) setTimeout(() => qtyInput.focus(), 100);
-            } else { resetStockDisplay(stockDisplay, unitDisplay, qtyInput); }
+
+            if (!value) {
+                resetStockDisplay(stockDisplay, unitDisplay, qtyInput);
+                return;
+            }
+
+            // Duplicate check for native change events
+            if (isProductDuplicate(value, selectElement) && !isInit) {
+                if (selectElement.dataset && selectElement.dataset.suppressDuplicate === '1') {
+                    try { delete selectElement.dataset.suppressDuplicate; } catch (e) { selectElement.dataset.suppressDuplicate = ''; }
+                    return;
+                }
+                Swal.fire({
+                    title: 'Product Duplicate',
+                    text: 'This product is already selected in another row.',
+                    icon: 'warning',
+                    confirmButtonColor: '#f59e0b'
+                });
+                if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                    jQuery(selectElement).val(null).trigger('change');
+                } else {
+                    selectElement.value = '';
+                    try { selectElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+                }
+                resetStockDisplay(stockDisplay, unitDisplay, qtyInput);
+                return;
+            }
+
+            // Find selected option by value
+            let selectedOption = null;
+            for (let i = 0; i < selectElement.options.length; i++) {
+                const opt = selectElement.options[i];
+                if (String(opt.value) === value) { selectedOption = opt; break; }
+            }
+
+            const baseStock = parseFloat(selectedOption && selectedOption.dataset ? selectedOption.dataset.stock : 0) || 0;
+            const originalQty = parseFloat(qtyInput.getAttribute('data-original-qty')) || 0;
+            const availableStock = baseStock + originalQty;
+            const unit = (selectedOption && selectedOption.dataset && selectedOption.dataset.unit) ? selectedOption.dataset.unit : 'pcs';
+
+            updateStockDisplay(stockDisplay, availableStock);
+            unitDisplay.textContent = unit;
+            qtyInput.setAttribute('data-stock', availableStock);
+            if (!isInit) setTimeout(() => qtyInput.focus(), 100);
+        }
+        function isProductDuplicate(value, currentSelect) {
+            if (!value) return false;
+            let duplicate = false;
+            document.querySelectorAll('.product-select').forEach(sel => {
+                if (sel !== currentSelect && String(sel.value) === String(value)) duplicate = true;
+            });
+            return duplicate;
+        }
+        function bindProductEvents(selectEl, row) {
+            // Native change updates
+            selectEl.addEventListener('change', function() { updateProductStock(this, row); });
+
+            // Select2 hooks
+            if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                const $el = jQuery(selectEl);
+                $el.off('select2:opening.so select2:select.so select2:clear.so');
+                $el.on('select2:opening.so', function() { $el.data('prev', $el.val()); });
+                $el.on('select2:select.so', function(e) {
+                    const selectedId = e && e.params && e.params.data ? String(e.params.data.id) : String($el.val() || '');
+                    if (isProductDuplicate(selectedId, selectEl)) {
+                        selectEl.dataset.suppressDuplicate = '1';
+                        Swal.fire({
+                            title: 'Product Duplicate',
+                            text: 'This product is already selected in another row.',
+                            icon: 'warning',
+                            confirmButtonColor: '#f59e0b'
+                        }).then(() => {
+                            const prev = $el.data('prev') || null;
+                            $el.val(prev).trigger('change');
+                            setTimeout(() => { try { $el.select2('open'); } catch (err) {} }, 0);
+                        });
+                    } else {
+                        updateProductStock(selectEl, row);
+                    }
+                });
+                $el.on('select2:clear.so', function() {
+                    resetStockDisplay(row.querySelector('.stock-display'), row.querySelector('.unit-display'), row.querySelector('.qty-input'));
+                });
+            }
+        }
+        function initSelect2(selectEl, row) {
+            try {
+                if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                    const $el = jQuery(selectEl);
+                    if (!$el.hasClass('select2-hidden-accessible') && !$el.data('select2')) {
+                        const dpEl = (row && row.closest && row.closest('.modal .modal-content')) || document.querySelector('.modal.show .modal-content') || document.body;
+                        $el.select2({ theme: 'bootstrap-5', width: 'style', dropdownParent: jQuery(dpEl) });
+                    } else {
+                        $el.trigger('change.select2');
+                    }
+                } else {
+                    document.dispatchEvent(new Event('reinit-select2'));
+                    setTimeout(() => { try { initSelect2(selectEl, row); } catch (e) {} }, 120);
+                }
+            } catch (e) { /* no-op */ }
         }
         function updateStockDisplay(el, stock) { el.textContent = stock.toLocaleString('id-ID'); if (stock > 10) { el.className='stock-display inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-800'; } else if (stock > 0) { el.className='stock-display inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800'; } else { el.className='stock-display inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800'; el.textContent='Out of Stock'; } }
         function resetStockDisplay(stockDisplay, unitDisplay, qtyInput) { stockDisplay.textContent='-'; stockDisplay.className='stock-display inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800'; unitDisplay.textContent='-'; qtyInput.setAttribute('data-stock','0'); if (!qtyInput.getAttribute('data-original-qty')) qtyInput.value=''; }
         function validateQuantityRealTime(input) { const qty=parseFloat(input.value); const stock=parseFloat(input.getAttribute('data-stock'))||0; if (qty && stock>0 && qty>stock) { input.classList.add('border-red-500','ring-2','ring-red-200'); input.classList.remove('border-gray-300'); if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('stock-warning')) { const w=document.createElement('p'); w.className='stock-warning mt-1 text-xs text-red-600 flex items-center'; w.innerHTML=`<svg class=\"w-3 h-3 mr-1\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path fill-rule=\"evenodd\" d=\"M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd\"/> Insufficient stock! Available: ${stock.toLocaleString('id-ID')}`; input.parentNode.appendChild(w); } } else { input.classList.remove('border-red-500','ring-2','ring-red-200'); input.classList.add('border-gray-300'); const w=input.parentNode.querySelector('.stock-warning'); if (w) w.remove(); } }
         function validateQuantity(input) { const qty=parseFloat(input.value); const stock=parseFloat(input.getAttribute('data-stock'))||0; if (qty && stock>0 && qty>stock) { Swal.fire({ title:'Insufficient Stock!', html:`<div class=\"text-left\"><p class=\"text-gray-600 mb-2\">The requested quantity exceeds available stock:</p><div class=\"bg-gray-50 p-3 rounded-lg\"><p><strong>Requested:</strong> ${qty.toLocaleString('id-ID')}</p><p><strong>Available:</strong> ${stock.toLocaleString('id-ID')}</p><p class=\"text-red-600\"><strong>Shortage:</strong> ${(qty-stock).toLocaleString('id-ID')}</p></div></div>`, icon:'error', confirmButtonColor:'#ef4444', confirmButtonText:'I Understand'}).then(()=>{ input.focus(); input.select(); }); } }
-        window.removeProductRow = function(button) { const row=button.closest('tr'); const tbody=document.getElementById('productsTableBody'); if (tbody.children.length>1) { row.remove(); } else { row.querySelector('.product-select').value=''; const stockDisplay=row.querySelector('.stock-display'); const unitDisplay=row.querySelector('.unit-display'); const qtyInput=row.querySelector('.qty-input'); resetStockDisplay(stockDisplay,unitDisplay,qtyInput); qtyInput.value=''; } };
+        window.removeProductRow = function(button) {
+            const row = button.closest('tr');
+            const tbody = document.getElementById('productsTableBody');
+            if (tbody.children.length > 1) {
+                row.remove();
+            } else {
+                // Clear last row instead of removing
+                const clearSelect = row.querySelector('.product-select');
+                if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                    jQuery(clearSelect).val(null).trigger('change');
+                } else {
+                    clearSelect.value = '';
+                    try { clearSelect.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+                }
+                const stockDisplay = row.querySelector('.stock-display');
+                const unitDisplay = row.querySelector('.unit-display');
+                const qtyInput = row.querySelector('.qty-input');
+                resetStockDisplay(stockDisplay, unitDisplay, qtyInput);
+                qtyInput.value='';
+            }
+        };
         document.getElementById('salesOrderForm').addEventListener('submit', function(e){ const productSelects=document.querySelectorAll('.product-select'); const qtyInputs=document.querySelectorAll('.qty-input'); let hasValid=false; let stockIssue=false; productSelects.forEach((sel,i)=>{ if(sel.value){ hasValid=true; const q=parseFloat(qtyInputs[i].value); const st=parseFloat(qtyInputs[i].getAttribute('data-stock'))||0; if(q && st>0 && q>st) stockIssue=true; }}); if(!hasValid){ e.preventDefault(); Swal.fire({ title:'Validation Error', text:'Please select at least one product.', icon:'error', confirmButtonColor:'#ef4444'}); return false;} if(stockIssue){ e.preventDefault(); Swal.fire({ title:'Stock Validation Error', text:'Some products have insufficient stock. Please adjust quantities.', icon:'error', confirmButtonColor:'#ef4444'}); return false;} });
+
+        // Initialize customer Select2 explicitly
+        const customerSelect = document.getElementById('customer_id');
+        if (customerSelect) initSelect2(customerSelect);
+
+        // Initialize any existing product selects
+        document.querySelectorAll('.product-select').forEach(sel => initSelect2(sel));
+
+        // Global reinit hook
+        document.addEventListener('reinit-select2', function() {
+            document.querySelectorAll('select.select2').forEach(sel => initSelect2(sel));
+        });
+
+        // On window load, ensure Select2 widths are correct
+        window.addEventListener('load', function() {
+            try {
+                if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                    document.querySelectorAll('.product-select').forEach(function(sel) {
+                        const $el = jQuery(sel);
+                        if ($el.hasClass('select2-hidden-accessible')) {
+                            const val = $el.val();
+                            $el.select2('destroy');
+                            initSelect2(sel);
+                            if (val) { $el.val(val).trigger('change'); }
+                        } else {
+                            initSelect2(sel);
+                        }
+                    });
+                }
+            } catch (e) { /* no-op */ }
+        });
+
+        // Final nudge to (re)initialize all Select2s in case of late script loading
+        try { document.dispatchEvent(new Event('reinit-select2')); } catch (e) {}
     });
 </script>
 @endpush

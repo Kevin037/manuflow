@@ -38,7 +38,7 @@
                        class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
             </div>
             <div class="flex-1 min-w-0">
-                <select id="formula_id" name="formula_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+                <select id="formula_id" name="formula_id" class="select2 w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
                     <option value="">All Formulas</option>
                     @if(isset($formulas))
                         @foreach($formulas as $formula)

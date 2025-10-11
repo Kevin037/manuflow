@@ -37,7 +37,7 @@
                    class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
           </div>
           <div class="flex-1 min-w-0">
-            <select id="payment_type" name="payment_type" class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+            <select id="payment_type" name="payment_type" class="select2 w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
               <option value="">All Payment Types</option>
               <option value="cash">Cash</option>
               <option value="bank_transfer">Bank Transfer</option>

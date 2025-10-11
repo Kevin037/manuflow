@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2" for="order_id">Order *</label>
-                    <select id="order_id" name="order_id" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required>
+                    <select id="order_id" name="order_id" class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required>
                         <option value="">Select Order</option>
                         @foreach($orders as $order)
                             <option value="{{ $order->id }}" data-total="{{ $order->total }}" data-customer="{{ $order->customer?->name }}" data-details='@json($order->orderDetails->map(fn($d)=>["product"=>$d->product?->name,"qty"=>$d->qty]))'>{{ $order->no }} - {{ $order->customer?->name }}</option>

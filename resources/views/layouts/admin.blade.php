@@ -155,44 +155,16 @@
                 initSubmitSpinners();
             }
         })();
+
+            (function () {
+                    $('.select2').select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        placeholder: 'Select an option',
+                        allowClear: true,
+                    });
+                })();
         </script>
-    
-    <!-- Custom Select2 Styling -->
-    <style>
-        .select2-container--bootstrap-5 .select2-selection {
-            border-color: #d1d5db !important;
-            border-radius: 0.5rem !important;
-            padding: 0.5rem 0.75rem !important;
-            min-height: 2.5rem !important;
-        }
-        
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-            color: #374151 !important;
-            padding-left: 0 !important;
-            line-height: 1.5rem !important;
-        }
-        
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
-            height: 2.25rem !important;
-            right: 0.75rem !important;
-        }
-        
-        .select2-container--bootstrap-5.select2-container--focus .select2-selection {
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
-        }
-        
-        .select2-dropdown {
-            border-color: #d1d5db !important;
-            border-radius: 0.5rem !important;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-        }
-        
-        .select2-results__option--highlighted {
-            background-color: #6366f1 !important;
-        }
-    </style>
-    
     @stack('scripts')
 </body>
 </html>

@@ -46,13 +46,13 @@
                             </p>
                         @enderror
                     </div>
-                    
+                    {{-- // tesselect2 --}}
                     <div>
                         <label for="supplier_id" class="block text-sm font-semibold text-gray-700 mb-2">
                             Supplier *
                         </label>
                         <select name="supplier_id" id="supplier_id" 
-                                class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('supplier_id') border-red-500 ring-2 ring-red-200 @enderror">
+                                class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('supplier_id') border-red-500 ring-2 ring-red-200 @enderror">
                             <option value="">Select Supplier</option>
                             @foreach($suppliers as $supplier)
                                 <option value="{{ $supplier->id }}" 
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         row.className = 'hover:bg-gray-50 transition-colors duration-200';
         row.innerHTML = `
             <td class="px-6 py-4">
-                <select class="material-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" 
+                <select class="select2 material-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" style="width: 100%;" 
                         name="materials[${currentIndex}][material_id]" required>
                     <option value="">Select Material</option>
                     ${materialsData.map(material => 
@@ -196,11 +196,10 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         tbody.appendChild(row);
 
-        // Add event listener for material selection
+        // Bind events and initialize Select2 for material select
         const materialSelect = row.querySelector('.material-select');
-        materialSelect.addEventListener('change', function() {
-            updateMaterialInfo(this, row);
-        });
+        bindMaterialEvents(materialSelect, row);
+        initSelect2(materialSelect, row);
 
         // Update material info for pre-selected materials
         if (selectedMaterialId) {
@@ -212,50 +211,116 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateMaterialInfo(selectElement, row) {
-        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const value = (selectElement && typeof selectElement.value !== 'undefined') ? selectElement.value : '';
         const stockDisplay = row.querySelector('.stock-display');
         const unitDisplay = row.querySelector('.unit-display');
-        
-        if (selectedOption.value) {
-            // Check for duplicate material selection
-            const allMaterialSelects = document.querySelectorAll('.material-select');
-            let isDuplicate = false;
-            
-            allMaterialSelects.forEach(select => {
-                if (select !== selectElement && select.value === selectedOption.value) {
-                    isDuplicate = true;
-                }
-            });
-            
-            if (isDuplicate) {
-                // Show warning for duplicate selection
+
+        if (!value) {
+            resetStockDisplay(stockDisplay, unitDisplay);
+            return;
+        }
+
+        // Duplicate check
+        if (isMaterialDuplicate(value, selectElement)) {
+            if (selectElement.dataset && selectElement.dataset.suppressDuplicate === '1') {
+                try { delete selectElement.dataset.suppressDuplicate; } catch (e) { selectElement.dataset.suppressDuplicate = ''; }
+                return;
+            } else {
                 Swal.fire({
                     title: 'Material Duplikat',
                     text: 'Material ini sudah dipilih di baris lain. Silakan pilih material yang berbeda atau update jumlah yang sudah ada.',
                     icon: 'warning',
                     confirmButtonColor: '#f59e0b'
                 });
-                selectElement.value = ''; // Reset selection
+                if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                    jQuery(selectElement).val(null).trigger('change');
+                } else {
+                    selectElement.value = '';
+                    try { selectElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+                }
                 resetStockDisplay(stockDisplay, unitDisplay);
                 return;
             }
-            
-            const stock = parseFloat(selectedOption.dataset.stock) || 0;
-            const unit = selectedOption.dataset.unit || '-';
-            
-            // Update stock display with proper formatting and color
-            updateStockDisplay(stockDisplay, stock);
-            unitDisplay.textContent = unit;
-            
-            // Auto-focus quantity input for better UX
-            const qtyInput = row.querySelector('input[type="number"]');
-            if (qtyInput) {
-                setTimeout(() => qtyInput.focus(), 100);
-            }
-        } else {
-            // Reset to default state when no material selected
-            resetStockDisplay(stockDisplay, unitDisplay);
         }
+
+        // Find option by value safely
+        let selectedOption = null;
+        for (let i = 0; i < selectElement.options.length; i++) {
+            const opt = selectElement.options[i];
+            if (opt.value === value) { selectedOption = opt; break; }
+        }
+
+        const stock = parseFloat(selectedOption && selectedOption.dataset ? selectedOption.dataset.stock : 0) || 0;
+        const unit = (selectedOption && selectedOption.dataset && selectedOption.dataset.unit) ? selectedOption.dataset.unit : '-';
+
+        updateStockDisplay(stockDisplay, stock);
+        unitDisplay.textContent = unit;
+
+        const qtyInput = row.querySelector('input[type="number"]');
+        if (qtyInput) {
+            setTimeout(() => qtyInput.focus(), 100);
+        }
+    }
+
+    function isMaterialDuplicate(value, currentSelect) {
+        if (!value) return false;
+        let dup = false;
+        document.querySelectorAll('.material-select').forEach(sel => {
+            if (sel !== currentSelect && String(sel.value) === String(value)) {
+                dup = true;
+            }
+        });
+        return dup;
+    }
+
+    function bindMaterialEvents(selectEl, row) {
+        selectEl.addEventListener('change', function() {
+            updateMaterialInfo(this, row);
+        });
+
+        if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+            const $el = jQuery(selectEl);
+            $el.off('select2:opening.select2dup select2:select.select2dup select2:clear.select2dup');
+            $el.on('select2:opening.select2dup', function() { $el.data('prev', $el.val()); });
+            $el.on('select2:select.select2dup', function(e) {
+                const selectedId = e && e.params && e.params.data ? String(e.params.data.id) : String($el.val() || '');
+                if (isMaterialDuplicate(selectedId, selectEl)) {
+                    selectEl.dataset.suppressDuplicate = '1';
+                    Swal.fire({
+                        title: 'Material Duplikat',
+                        text: 'Material ini sudah dipilih di baris lain. Silakan pilih material yang berbeda atau update jumlah yang sudah ada.',
+                        icon: 'warning',
+                        confirmButtonColor: '#f59e0b'
+                    }).then(() => {
+                        const prev = $el.data('prev') || null;
+                        $el.val(prev).trigger('change');
+                        setTimeout(() => { try { $el.select2('open'); } catch (err) {} }, 0);
+                    });
+                } else {
+                    updateMaterialInfo(selectEl, row);
+                }
+            });
+            $el.on('select2:clear.select2dup', function() {
+                resetStockDisplay(row.querySelector('.stock-display'), row.querySelector('.unit-display'));
+            });
+        }
+    }
+
+    function initSelect2(selectEl, row) {
+        try {
+            if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                const $el = jQuery(selectEl);
+                if (!$el.hasClass('select2-hidden-accessible') && !$el.data('select2')) {
+                    const dpEl = (row && row.closest && row.closest('.modal .modal-content')) || document.querySelector('.modal.show .modal-content') || document.body;
+                    $el.select2({ theme: 'bootstrap-5', width: 'style', dropdownParent: jQuery(dpEl) });
+                } else {
+                    $el.trigger('change.select2');
+                }
+            } else {
+                document.dispatchEvent(new Event('reinit-select2'));
+                setTimeout(() => { try { initSelect2(selectEl, row); } catch (e) {} }, 120);
+            }
+        } catch (e) { /* no-op */ }
     }
 
     function updateStockDisplay(stockDisplay, stock) {
@@ -287,7 +352,13 @@ document.addEventListener('DOMContentLoaded', function() {
             row.remove();
         } else {
             // Clear the last row instead of removing it
-            row.querySelector('.material-select').value = '';
+            const clearSelect = row.querySelector('.material-select');
+            if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                jQuery(clearSelect).val(null).trigger('change');
+            } else {
+                clearSelect.value = '';
+                try { clearSelect.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+            }
             row.querySelector('input[type="number"]').value = '';
             const stockDisplay = row.querySelector('.stock-display');
             const unitDisplay = row.querySelector('.unit-display');
@@ -320,7 +391,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function validateQuantity(input) {
+    // Expose for inline usage
+    window.validateQuantity = function(input) {
         const qty = parseFloat(input.value);
         if (qty && qty > 1000) {
             Swal.fire({
@@ -338,6 +410,40 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+
+    // Initialize supplier select explicitly
+    const supplierSelect = document.getElementById('supplier_id');
+    if (supplierSelect) initSelect2(supplierSelect);
+
+    // Initialize any existing material selects (if pre-rendered)
+    document.querySelectorAll('.material-select').forEach(sel => initSelect2(sel));
+
+    // Hook global reinit
+    document.addEventListener('reinit-select2', function() {
+        document.querySelectorAll('select.select2').forEach(sel => initSelect2(sel));
+    });
+
+    // On full window load, ensure Select2 widths are correct
+    window.addEventListener('load', function() {
+        try {
+            if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                document.querySelectorAll('.material-select').forEach(function(sel) {
+                    const $el = jQuery(sel);
+                    if ($el.hasClass('select2-hidden-accessible')) {
+                        const val = $el.val();
+                        $el.select2('destroy');
+                        initSelect2(sel);
+                        if (val) { $el.val(val).trigger('change'); }
+                    } else {
+                        initSelect2(sel);
+                    }
+                });
+            }
+        } catch (e) { /* no-op */ }
+    });
+
+    // Final nudge
+    try { document.dispatchEvent(new Event('reinit-select2')); } catch (e) {}
 });
 </script>
 @endpush

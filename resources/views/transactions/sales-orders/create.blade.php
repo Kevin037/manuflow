@@ -51,7 +51,7 @@
                             Customer *
                         </label>
                         <select name="customer_id" id="customer_id" 
-                                class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_id') border-red-500 ring-2 ring-red-200 @enderror">
+                                class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_id') border-red-500 ring-2 ring-red-200 @enderror">
                             <option value="">Select Customer</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('addProductBtn').addEventListener('click', function() {
         addProductRow();
     });
-
+// tesselect2
     function addProductRow() {
         const tbody = document.getElementById('productsTableBody');
         const currentIndex = rowIndex; // Capture current index before increment
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
         row.className = 'hover:bg-gray-50 transition-colors duration-200';
         row.innerHTML = `
             <td class="px-6 py-4">
-                <select class="product-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" 
+                <select class="select2 product-select w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" style="width: 100%;" 
                         name="products[${currentIndex}][product_id]" required>
                     <option value="">Select Product</option>
                     ${productsData.map(product => 
@@ -186,12 +186,11 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         tbody.appendChild(row);
         rowIndex++; // Increment row index for next row
-
-        // Add event listener for product selection
+// tesselect2
+        // Bind events and initialize Select2 for product selection
         const productSelect = row.querySelector('.product-select');
-        productSelect.addEventListener('change', function() {
-            updateProductStock(this, row);
-        });
+        bindProductEvents(productSelect, row);
+        initSelect2(productSelect, row);
 
         // Add event listener for quantity validation
         const qtyInput = row.querySelector('.qty-input');
@@ -207,51 +206,122 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateProductStock(selectElement, row) {
-        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const value = (selectElement && typeof selectElement.value !== 'undefined') ? selectElement.value : '';
         const stockDisplay = row.querySelector('.stock-display');
         const unitDisplay = row.querySelector('.unit-display');
         const qtyInput = row.querySelector('.qty-input');
         
-        if (selectedOption.value) {
-            // Check for duplicate product selection
-            const allProductSelects = document.querySelectorAll('.product-select');
-            let isDuplicate = false;
-            
-            allProductSelects.forEach(select => {
-                if (select !== selectElement && select.value === selectedOption.value) {
-                    isDuplicate = true;
-                }
-            });
-            
-            if (isDuplicate) {
-                // Show warning for duplicate selection
+        if (!value) {
+            // Reset to default state when no product selected
+            resetStockDisplay(stockDisplay, unitDisplay, qtyInput);
+            return;
+        }
+
+        // Duplicate check using helper
+        if (isProductDuplicate(value, selectElement)) {
+            if (selectElement.dataset && selectElement.dataset.suppressDuplicate === '1') {
+                try { delete selectElement.dataset.suppressDuplicate; } catch (e) { selectElement.dataset.suppressDuplicate = ''; }
+                return;
+            } else {
                 Swal.fire({
                     title: 'Product Duplicate',
                     text: 'This product has already been selected in another row. Please choose a different product or update the existing quantity.',
                     icon: 'warning',
                     confirmButtonColor: '#f59e0b'
                 });
-                selectElement.value = ''; // Reset selection
+                if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                    jQuery(selectElement).val(null).trigger('change');
+                } else {
+                    selectElement.value = '';
+                    try { selectElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+                }
                 resetStockDisplay(stockDisplay, unitDisplay, qtyInput);
                 return;
             }
-            
-            const stock = parseFloat(selectedOption.dataset.stock) || 0;
-            const unit = selectedOption.dataset.unit || 'pcs';
-            
-            // Update stock display with proper formatting and color
-            updateStockDisplay(stockDisplay, stock);
-            unitDisplay.textContent = unit;
-            
-            // Store stock data in qty input for validation
-            qtyInput.setAttribute('data-stock', stock);
-            
-            // Auto-focus quantity input for better UX
-            setTimeout(() => qtyInput.focus(), 100);
-        } else {
-            // Reset to default state when no product selected
-            resetStockDisplay(stockDisplay, unitDisplay, qtyInput);
         }
+
+        // Find the selected option safely by value
+        let selectedOption = null;
+        for (let i = 0; i < selectElement.options.length; i++) {
+            const opt = selectElement.options[i];
+            if (opt.value === value) { selectedOption = opt; break; }
+        }
+
+        const stock = parseFloat(selectedOption && selectedOption.dataset ? selectedOption.dataset.stock : 0) || 0;
+        const unit = (selectedOption && selectedOption.dataset && selectedOption.dataset.unit) ? selectedOption.dataset.unit : 'pcs';
+        
+        // Update stock display with proper formatting and color
+        updateStockDisplay(stockDisplay, stock);
+        unitDisplay.textContent = unit;
+        
+        // Store stock data in qty input for validation
+        qtyInput.setAttribute('data-stock', stock);
+        
+        // Auto-focus quantity input for better UX
+        setTimeout(() => qtyInput.focus(), 100);
+    }
+
+    function isProductDuplicate(value, currentSelect) {
+        if (!value) return false;
+        let dup = false;
+        document.querySelectorAll('.product-select').forEach(sel => {
+            if (sel !== currentSelect && String(sel.value) === String(value)) {
+                dup = true;
+            }
+        });
+        return dup;
+    }
+
+    function bindProductEvents(selectEl, row) {
+        // Native change updates stock/unit
+        selectEl.addEventListener('change', function() {
+            updateProductStock(this, row);
+        });
+
+        // Select2-specific event hooks
+        if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+            const $el = jQuery(selectEl);
+            $el.off('select2:opening.so select2:select.so select2:clear.so');
+            $el.on('select2:opening.so', function() { $el.data('prev', $el.val()); });
+            $el.on('select2:select.so', function(e) {
+                const selectedId = e && e.params && e.params.data ? String(e.params.data.id) : String($el.val() || '');
+                if (isProductDuplicate(selectedId, selectEl)) {
+                    selectEl.dataset.suppressDuplicate = '1';
+                    Swal.fire({
+                        title: 'Product Duplicate',
+                        text: 'This product has already been selected in another row. Please choose a different product or update the existing quantity.',
+                        icon: 'warning',
+                        confirmButtonColor: '#f59e0b'
+                    }).then(() => {
+                        const prev = $el.data('prev') || null;
+                        $el.val(prev).trigger('change');
+                        setTimeout(() => { try { $el.select2('open'); } catch (err) {} }, 0);
+                    });
+                } else {
+                    updateProductStock(selectEl, row);
+                }
+            });
+            $el.on('select2:clear.so', function() {
+                resetStockDisplay(row.querySelector('.stock-display'), row.querySelector('.unit-display'), row.querySelector('.qty-input'));
+            });
+        }
+    }
+
+    function initSelect2(selectEl, row) {
+        try {
+            if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                const $el = jQuery(selectEl);
+                if (!$el.hasClass('select2-hidden-accessible') && !$el.data('select2')) {
+                    const dpEl = (row && row.closest && row.closest('.modal .modal-content')) || document.querySelector('.modal.show .modal-content') || document.body;
+                    $el.select2({ theme: 'bootstrap-5', width: 'style', dropdownParent: jQuery(dpEl) });
+                } else {
+                    $el.trigger('change.select2');
+                }
+            } else {
+                document.dispatchEvent(new Event('reinit-select2'));
+                setTimeout(() => { try { initSelect2(selectEl, row); } catch (e) {} }, 120);
+            }
+        } catch (e) { /* no-op */ }
     }
 
     function updateStockDisplay(stockDisplay, stock) {
@@ -346,7 +416,13 @@ document.addEventListener('DOMContentLoaded', function() {
             row.remove();
         } else {
             // Clear the last row instead of removing it
-            row.querySelector('.product-select').value = '';
+            const clearSelect = row.querySelector('.product-select');
+            if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                jQuery(clearSelect).val(null).trigger('change');
+            } else {
+                clearSelect.value = '';
+                try { clearSelect.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+            }
             row.querySelector('.qty-input').value = '';
             const stockDisplay = row.querySelector('.stock-display');
             const unitDisplay = row.querySelector('.unit-display');
@@ -403,6 +479,39 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
     });
+    // Initialize customer select explicitly
+    const customerSelect = document.getElementById('customer_id');
+    if (customerSelect) initSelect2(customerSelect);
+
+    // Initialize any existing product selects (if any pre-rendered in future)
+    document.querySelectorAll('.product-select').forEach(sel => initSelect2(sel));
+
+    // Global reinit hook
+    document.addEventListener('reinit-select2', function() {
+        document.querySelectorAll('select.select2').forEach(sel => initSelect2(sel));
+    });
+
+    // On full window load, ensure Select2 widths are correct
+    window.addEventListener('load', function() {
+        try {
+            if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                document.querySelectorAll('.product-select').forEach(function(sel) {
+                    const $el = jQuery(sel);
+                    if ($el.hasClass('select2-hidden-accessible')) {
+                        const val = $el.val();
+                        $el.select2('destroy');
+                        initSelect2(sel);
+                        if (val) { $el.val(val).trigger('change'); }
+                    } else {
+                        initSelect2(sel);
+                    }
+                });
+            }
+        } catch (e) { /* no-op */ }
+    });
+
+    // Final nudge to (re)initialize all Select2s in case of late script loading
+    try { document.dispatchEvent(new Event('reinit-select2')); } catch (e) {}
 });
 </script>
 @endpush

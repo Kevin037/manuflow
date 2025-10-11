@@ -50,7 +50,7 @@
                                 Product *
                             </label>
                             <select name="product_id" id="product_id" 
-                                    class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('product_id') border-red-500 ring-2 ring-red-200 @enderror">
+                                    class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('product_id') border-red-500 ring-2 ring-red-200 @enderror">
                                 <option value="">Select Product</option>
                                 @foreach($products as $product)
                                     <option value="{{ $product->id }}" {{ old('product_id', $production->product_id) == $product->id ? 'selected' : '' }}>

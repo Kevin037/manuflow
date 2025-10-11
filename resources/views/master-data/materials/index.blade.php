@@ -47,7 +47,7 @@
                                class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
                     </div>
                     <div class="flex-1 min-w-0">
-                        <select id="supplier_id" name="supplier_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+                        <select id="supplier_id" name="supplier_id" class="select2 w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
                             <option value="">All Suppliers</option>
                             @if(isset($suppliers))
                                 @foreach($suppliers as $supplier)

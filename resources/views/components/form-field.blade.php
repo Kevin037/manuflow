@@ -39,7 +39,7 @@
                 name="{{ $name }}"
                 @if($required) required @endif
                 @if($disabled) disabled @endif
-                {{ $attributes->merge(['class' => 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm' . ($error ? ' border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : '')]) }}
+                {{ $attributes->merge(['class' => 'select2 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm' . ($error ? ' border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : '')]) }}
             >
                 {{ $slot }}
             </select>

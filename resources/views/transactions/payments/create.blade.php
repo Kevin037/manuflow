@@ -27,7 +27,7 @@
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2" for="invoice_id">Invoice *</label>
-            <select id="invoice_id" name="invoice_id" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required>
+            <select id="invoice_id" name="invoice_id" class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required>
               <option value="">Select Invoice</option>
               @foreach($invoices as $invoice)
               @php $order = $invoice->order; $details = $order?->orderDetails->map(fn($d)=>['product'=>$d->product?->name,'qty'=>$d->qty,'price'=>$d->product?->price,'subtotal'=>$d->qty * ($d->product?->price ?? 0)]); @endphp
@@ -39,7 +39,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2" for="payment_type">Payment Type *</label>
-            <select id="payment_type" name="payment_type" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required>
+            <select id="payment_type" name="payment_type" class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required>
               <option value="transfer" {{ old('payment_type')==='transfer'?'selected':'' }}>Transfer</option>
               <option value="cash" {{ old('payment_type')==='cash'?'selected':'' }}>Cash</option>
             </select>

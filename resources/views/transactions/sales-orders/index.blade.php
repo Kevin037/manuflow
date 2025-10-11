@@ -47,7 +47,7 @@
                                class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
                     </div>
                     <div class="flex-1 min-w-0">
-                        <select id="status" name="status" class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+                        <select id="status" name="status" class="select2 w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>

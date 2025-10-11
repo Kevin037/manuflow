@@ -110,7 +110,7 @@
                 </label>
                 <select id="formula_id" 
                         name="formula_id" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 @error('formula_id') border-red-500 ring-red-500 @enderror">
+                        class="select2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 @error('formula_id') border-red-500 ring-red-500 @enderror">
                     <option value="">Select Formula</option>
                     @foreach($formulas as $formula)
                         <option value="{{ $formula->id }}" {{ old('formula_id', $product->formula_id) == $formula->id ? 'selected' : '' }}>

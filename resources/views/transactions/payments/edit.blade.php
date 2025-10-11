@@ -28,7 +28,7 @@
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2" for="invoice_id">Invoice *</label>
-            <select id="invoice_id" name="invoice_id" disabled class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm bg-gray-100 text-gray-600">
+            <select id="invoice_id" name="invoice_id" disabled class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm bg-gray-100 text-gray-600">
               <option value="{{ $payment->invoice_id }}">{{ $payment->invoice?->no }} - {{ $payment->invoice?->order?->customer?->name }}</option>
             </select>
             <p class="mt-1 text-xs text-gray-500">Invoice cannot be changed.</p>
@@ -37,7 +37,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2" for="payment_type">Payment Type *</label>
-            <select id="payment_type" name="payment_type" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required>
+            <select id="payment_type" name="payment_type" class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" required>
               <option value="transfer" {{ $payment->payment_type==='transfer'?'selected':'' }}>Transfer</option>
               <option value="cash" {{ $payment->payment_type==='cash'?'selected':'' }}>Cash</option>
             </select>
