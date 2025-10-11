@@ -24,9 +24,9 @@
 
 <!-- Suppliers Table Card -->
 <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
-    <!-- Table Header -->
+    <!-- Table Header with Filters -->
     <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mb-4">
             <h2 class="text-base font-semibold text-gray-900">All Suppliers</h2>
             <div class="flex items-center gap-x-3">
                 <!-- Search will be handled by DataTables -->
@@ -35,6 +35,34 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Filters -->
+        <form id="filter-form" class="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+            <div class="flex-1 min-w-0">
+                <input type="date" id="start_date" name="start_date" value="{{ date('Y-m-d', strtotime('-1 month')) }}"
+                       class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+            </div>
+            <div class="flex-1 min-w-0">
+                <input type="date" id="end_date" name="end_date" value="{{ date('Y-m-d') }}"
+                       class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+            </div>
+            <div class="flex gap-x-2 flex-shrink-0">
+                <button type="submit" data-no-spinner
+                        class="inline-flex items-center gap-x-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 transition-all duration-200">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
+                    </svg>
+                    Apply
+                </button>
+                <a id="export-excel" href="{{ route('suppliers.export.excel') }}" 
+                   class="inline-flex items-center gap-x-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-all duration-200">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export Excel
+                </a>
+            </div>
+        </form>
     </div>
     
     <!-- Table -->
@@ -138,7 +166,13 @@ $(document).ready(function() {
     const table = $('#suppliers-table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '{{ route('suppliers.index') }}',
+        ajax: {
+            url: '{{ route('suppliers.index') }}',
+            data: function (d) {
+                d.start_date = $('#start_date').val();
+                d.end_date = $('#end_date').val();
+            }
+        },
         columns: [
             {
                 data: 'name', 
@@ -327,6 +361,26 @@ $(document).ready(function() {
     $(document).on('DOMContentLoaded', function() {
         $('#suppliers-count').text('Loading...');
     });
+
+    // Update export link when filters change
+    function updateExportLink() {
+        const startDate = $('#start_date').val();
+        const endDate = $('#end_date').val();
+        const exportUrl = '{{ route('suppliers.export.excel') }}' + 
+            '?start_date=' + encodeURIComponent(startDate) + 
+            '&end_date=' + encodeURIComponent(endDate);
+        $('#export-excel-btn').attr('href', exportUrl);
+    }
+
+    // Form submission and filter handling
+    $('#filter-form').on('submit', function(e) {
+        e.preventDefault();
+        table.ajax.reload();
+        updateExportLink();
+    });
+
+    // Initialize export link
+    updateExportLink();
 });
 </script>
 @endpush

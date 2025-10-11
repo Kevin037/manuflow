@@ -8,16 +8,23 @@ use App\Http\Requests\MaterialStoreRequest;
 use App\Http\Requests\MaterialUpdateRequest;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 
 class MaterialController extends Controller
 {
+    use ExportsDataTable;
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $materials = Material::with('supplier')->select(['id', 'name', 'qty', 'price', 'supplier_id', 'created_at']);
+            $materials = $this->applyDateFilters(Material::with('supplier')->select(['id', 'name', 'qty', 'price', 'supplier_id', 'created_at']), $request);
+            
+            // Apply supplier filter if provided
+            if ($request->filled('supplier_id')) {
+                $materials->where('supplier_id', $request->supplier_id);
+            }
             
             return DataTables::of($materials)
                 ->addColumn('supplier_name', function($material) {
@@ -29,7 +36,45 @@ class MaterialController extends Controller
                 ->make(true);
         }
 
-        return view('master-data.materials.index');
+        $suppliers = Supplier::all();
+        return view('master-data.materials.index', compact('suppliers'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $query = $this->applyDateFilters(Material::with('supplier')->select(['id', 'name', 'qty', 'price', 'supplier_id', 'created_at']), $request);
+        
+        // Apply supplier filter if provided
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->supplier_id);
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+        
+        $rows = $query->orderBy('id')->get()->map(function($m) {
+            return [
+                'name' => $m->name,
+                'qty' => $m->qty,
+                'price' => 'Rp ' . number_format($m->price, 0, ',', '.'),
+                'supplier_name' => $m->supplier ? $m->supplier->name : 'No Supplier',
+                'created_at' => $m->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
+
+        $headings = [
+            'name' => 'Name',
+            'qty' => 'Quantity',
+            'price' => 'Price',
+            'supplier_name' => 'Supplier',
+            'created_at' => 'Created',
+        ];
+
+        return $this->exportWithImages($rows, $headings, null, 'materials_export');
     }
 
     /**

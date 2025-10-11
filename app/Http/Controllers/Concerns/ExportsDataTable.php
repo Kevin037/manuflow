@@ -11,10 +11,10 @@ trait ExportsDataTable
     protected function applyDateFilters($query, Request $request, string $column = 'created_at')
     {
         if ($request->filled('start_date')) {
-            $query->whereDate($column, '>=', $request->date('start_date'));
+            $query->whereDate($column, '>=', $request->start_date);
         }
         if ($request->filled('end_date')) {
-            $query->whereDate($column, '<=', $request->date('end_date'));
+            $query->whereDate($column, '<=', $request->end_date);
         }
         return $query;
     }

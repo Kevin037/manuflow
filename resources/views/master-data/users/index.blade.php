@@ -39,12 +39,10 @@
         <!-- Filters -->
         <form id="filter-form" class="flex flex-col sm:flex-row items-start sm:items-end gap-4">
             <div class="flex-1 min-w-0">
-                {{-- <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label> --}}
                 <input type="date" id="start_date" name="start_date" value="{{ date('Y-m-d', strtotime('-1 month')) }}"
                        class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
             </div>
             <div class="flex-1 min-w-0">
-                {{-- <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date</label> --}}
                 <input type="date" id="end_date" name="end_date" value="{{ date('Y-m-d') }}"
                        class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
             </div>

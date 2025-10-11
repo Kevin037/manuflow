@@ -6,6 +6,7 @@ use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Models\Product;
 use App\Models\Formula;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,7 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
+    use ExportsDataTable;
     /**
      * Display a listing of the resource.
      */
@@ -20,6 +22,14 @@ class ProductController extends Controller
     {
         if ($request->ajax()) {
             $products = Product::with('formula')->latest();
+            
+            // Apply date filters
+            $products = $this->applyDateFilters($products, $request, 'created_at');
+            
+            // Apply formula filter
+            if ($request->filled('formula_id')) {
+                $products->where('formula_id', $request->formula_id);
+            }
 
             return DataTables::of($products)
                 ->addIndexColumn()
@@ -56,7 +66,51 @@ class ProductController extends Controller
                 ->make(true);
         }
 
-        return view('master-data.products.index');
+        $formulas = Formula::all();
+        return view('master-data.products.index', compact('formulas'));
+    }
+
+    /**
+     * Export products to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $products = Product::with('formula');
+        
+        // Apply date filters only if provided
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $products = $this->applyDateFilters($products, $request, 'created_at');
+        }
+        
+        // Apply formula filter
+        if ($request->filled('formula_id')) {
+            $products->where('formula_id', $request->formula_id);
+        }
+        
+        $data = $products->get()->map(function($product) {
+            return [
+                'sku' => $product->sku,
+                'name' => $product->name,
+                'qty' => $product->qty,
+                'price' => 'Rp ' . number_format($product->price, 0, ',', '.'),
+                'formula' => $product->formula ? $product->formula->name : '-',
+                'photo' => $product->photo && Storage::disk('public')->exists($product->photo) 
+                    ? storage_path('app/public/' . $product->photo) : null,
+                'created_at' => $product->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
+        
+        $headers = [
+            'sku' => 'SKU',
+            'name' => 'Name',
+            'qty' => 'Stock (qty)',
+            'price' => 'Price',
+            'formula' => 'Formula',
+            'photo' => 'Photo',
+            'created_at' => 'Created At'
+        ];
+        
+        return $this->exportWithImages($data, $headers, 'photo', 'products');
     }
 
     /**

@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Http\Requests\CustomerStoreRequest;
 use App\Http\Requests\CustomerUpdateRequest;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
 class CustomerController extends Controller
 {
+    use ExportsDataTable;
+
     /**
      * Display a listing of the resource.
      */
@@ -17,6 +20,9 @@ class CustomerController extends Controller
     {
         if ($request->ajax()) {
             $customers = Customer::select(['id', 'name', 'phone', 'created_at']);
+            
+            // Apply date filters
+            $customers = $this->applyDateFilters($customers, $request, 'created_at');
             
             return DataTables::of($customers)
                 ->editColumn('created_at', function($customer) {
@@ -26,6 +32,35 @@ class CustomerController extends Controller
         }
 
         return view('master-data.customers.index');
+    }
+
+    /**
+     * Export customers to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $customers = Customer::select(['id', 'name', 'phone', 'created_at']);
+        
+        // Apply date filters
+        $customers = $this->applyDateFilters($customers, $request, 'created_at');
+        
+        $data = $customers->get()->map(function($customer) {
+            return [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'created_at' => $customer->created_at->format('Y-m-d H:i:s'),
+            ];
+        })->toArray();
+        
+        $headers = [
+            'id' => 'ID',
+            'name' => 'Name', 
+            'phone' => 'Phone',
+            'created_at' => 'Created At'
+        ];
+        
+        return $this->exportWithImages($data, $headers, 'customers');
     }
 
     /**

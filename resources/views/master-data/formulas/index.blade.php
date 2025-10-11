@@ -3,46 +3,85 @@
 @section('title', 'Formulas')
 
 @section('content')
-<div class="flex justify-between items-center mb-6">
-    <div>
-        <h2 class="text-2xl font-bold text-gray-900">Formulas</h2>
-        <p class="text-gray-600">Manage your product formulas</p>
-    </div>
-    <a href="{{ route('formulas.create') }}" 
-       class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Add Formula
-    </a>
-</div>
-
-<div class="bg-white rounded-lg shadow-sm border border-gray-200">
-    <div class="p-6">
-        <div class="mb-4 flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <div class="text-sm text-gray-500">
-                    Total: <span id="formulas-count" class="font-medium text-gray-900">Loading...</span> formulas
+<div class="space-y-8">
+    <!-- Enhanced Header Section -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+        <div class="flex flex-col space-y-6 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div class="flex-1">
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Formulas</h1>
+                <div class="mt-3 flex items-center gap-x-4 text-sm text-gray-600">
+                    <span class="flex items-center gap-x-1.5">
+                        <svg class="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="3"/>
+                        </svg>
+                        <span id="formulas-count">0</span> active formulas
+                    </span>
+                    <span class="hidden sm:block">•</span>
+                    <span>Manage your product formulas</span>
                 </div>
             </div>
+            <div class="flex items-center gap-x-3">
+                <a href="{{ route('formulas.create') }}" 
+                   class="inline-flex items-center gap-x-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 transition-all duration-200">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Formula
+                </a>
+            </div>
         </div>
+    </div>
 
-        <div class="overflow-hidden">
-            <table id="formulas-table" class="min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No.</th>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formula Code</th>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formula Name</th>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost (Total)</th>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materials</th>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <!-- DataTables will populate this -->
-                </tbody>
-            </table>
+    <!-- Enhanced Data Table Card -->
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="relative">
+            <!-- Filters -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <form id="filter-form" class="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+                    <div class="flex-1 min-w-0">
+                        <input type="date" id="start_date" name="start_date" value="{{ date('Y-m-d', strtotime('-1 month')) }}"
+                               class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <input type="date" id="end_date" name="end_date" value="{{ date('Y-m-d') }}"
+                               class="w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500">
+                    </div>
+                    <div class="flex gap-x-2 flex-shrink-0">
+                        <button type="submit" data-no-spinner
+                                class="inline-flex items-center gap-x-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 transition-all duration-200">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
+                            </svg>
+                            Filter
+                        </button>
+                        <a id="export-excel-btn" href="#" 
+                           class="inline-flex items-center gap-x-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-all duration-200">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Export Excel
+                        </a>
+                    </div>
+                </form>
+            </div>
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table id="formulas-table" class="w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50/50">
+                        <tr>
+                            <th scope="col" class="py-4 pl-6 pr-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">No.</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Formula Code</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Formula Name</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Cost (Total)</th>
+                            <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Materials</th>
+                            <th scope="col" class="py-4 pl-3 pr-6 text-right text-xs font-semibold text-gray-900 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- DataTables will populate this -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -50,16 +89,51 @@
 
 @push('styles')
 <style>
+/* Custom DataTables Styling */
+.dataTables_wrapper {
+    padding: 0;
+}
+
+table.dataTable tbody td {
+    padding: 0 !important;
+}
+
+table.dataTable thead th {
+    padding: 1rem 1.5rem !important;
+}
+
+table.dataTable tbody tr {
+    min-height: 64px;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: #f9fafb !important;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 0;
+}
+
 .dataTables_wrapper .dataTables_length select {
-    @apply px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+    @apply rounded-lg border-gray-300 py-1.5 px-3 text-sm focus:border-primary-500 focus:ring-primary-500;
 }
 
 .dataTables_wrapper .dataTables_filter input {
-    @apply px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+    @apply rounded-lg border-gray-300 py-1.5 px-3 text-sm focus:border-primary-500 focus:ring-primary-500;
+    margin-left: 0.5rem;
+}
+
+.dataTables_wrapper .dataTables_info {
+    @apply text-sm text-gray-700 pt-4;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+    @apply pt-4;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-    @apply px-3 py-2 mx-0.5 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200;
+    @apply px-3 py-1.5 mx-0.5 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-200;
     background: white !important;
     border: 1px solid #d1d5db !important;
 }
@@ -71,23 +145,29 @@
     color: white !important;
 }
 
-table.dataTable tbody td {
-    padding: 0 !important;
-    border-top: 1px solid #f3f4f6 !important;
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    @apply bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed;
+    background: #f3f4f6 !important;
+    border-color: #e5e7eb !important;
 }
 
-table.dataTable thead th {
-    padding: 1rem 1.5rem !important;
-    border-bottom: 1px solid #e5e7eb !important;
-    background-color: #f9fafb !important;
+.dataTables_wrapper .dataTables_processing {
+    @apply bg-white bg-opacity-90;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    border: none !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    padding: 1rem 2rem !important;
+    border-radius: 0.5rem !important;
 }
 
-table.dataTable tbody tr {
-    min-height: 4rem;
+.dt-buttons {
+    @apply mb-4;
 }
 
-table.dataTable tbody tr:hover {
-    background-color: #f9fafb;
+.dt-button {
+    @apply bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-200 mr-2;
 }
 </style>
 @endpush
@@ -98,7 +178,13 @@ $(document).ready(function() {
     const table = $('#formulas-table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '{{ route('formulas.index') }}',
+        ajax: {
+            url: '{{ route('formulas.index') }}',
+            data: function (d) {
+                d.start_date = $('#start_date').val();
+                d.end_date = $('#end_date').val();
+            }
+        },
         columns: [
             {
                 data: 'DT_RowIndex', 
@@ -202,6 +288,39 @@ $(document).ready(function() {
             $('#formulas-count').text(settings._iRecordsTotal);
         }
     });
+
+    // Handle filter form submission
+    $('#filter-form').on('submit', function(e) {
+        e.preventDefault();
+        table.ajax.reload();
+        updateExportLink();
+    });
+
+    // Handle search to update export link
+    table.on('search.dt', function() {
+        updateExportLink();
+    });
+
+    // Function to update export link with current filters and search
+    function updateExportLink() {
+        const params = new URLSearchParams();
+        
+        // Add date filters
+        if ($('#start_date').val()) params.append('start_date', $('#start_date').val());
+        if ($('#end_date').val()) params.append('end_date', $('#end_date').val());
+        
+        // Add search term
+        const searchValue = table.search();
+        if (searchValue) params.append('search', searchValue);
+        
+        // Update export link
+        const baseUrl = '{{ route('formulas.export.excel') }}';
+        const newUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+        $('#export-excel-btn').attr('href', newUrl);
+    }
+
+    // Initialize export link with default filters on page load
+    updateExportLink();
 
     // Delete formula function with modern alert
     window.deleteFormula = function(id) {

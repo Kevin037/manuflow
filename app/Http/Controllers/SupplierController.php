@@ -8,16 +8,18 @@ use App\Http\Requests\SupplierStoreRequest;
 use App\Http\Requests\SupplierUpdateRequest;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 
 class SupplierController extends Controller
 {
+    use ExportsDataTable;
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $suppliers = Supplier::select(['id', 'name', 'phone', 'created_at']);
+            $suppliers = $this->applyDateFilters(Supplier::select(['id', 'name', 'phone', 'created_at']), $request);
             
             return DataTables::of($suppliers)
                 ->editColumn('created_at', function($supplier) {
@@ -31,6 +33,35 @@ class SupplierController extends Controller
         }
 
         return view('master-data.suppliers.index');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $query = $this->applyDateFilters(Supplier::select(['id', 'name', 'phone', 'created_at']), $request);
+        
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        
+        $rows = $query->orderBy('id')->get()->map(function($s) {
+            return [
+                'name' => $s->name,
+                'phone' => $s->phone,
+                'created_at' => $s->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
+
+        $headings = [
+            'name' => 'Name',
+            'phone' => 'Phone',
+            'created_at' => 'Created',
+        ];
+
+        return $this->exportWithImages($rows, $headings, null, 'suppliers_export');
     }
 
     /**

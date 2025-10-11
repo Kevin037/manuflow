@@ -7,12 +7,15 @@ use App\Http\Requests\FormulaUpdateRequest;
 use App\Models\Formula;
 use App\Models\FormulaDetail;
 use App\Models\Material;
+use App\Http\Controllers\Concerns\ExportsDataTable;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 
 class FormulaController extends Controller
 {
+    use ExportsDataTable;
+
     /**
      * Display a listing of the resource.
      */
@@ -20,6 +23,9 @@ class FormulaController extends Controller
     {
         if ($request->ajax()) {
             $formulas = Formula::withCount('formulaDetails')->latest();
+
+            // Apply date filters
+            $formulas = $this->applyDateFilters($formulas, $request, 'created_at');
 
             return DataTables::of($formulas)
                 ->addIndexColumn()
@@ -43,6 +49,39 @@ class FormulaController extends Controller
         }
 
         return view('master-data.formulas.index');
+    }
+
+    /**
+     * Export formulas to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $formulas = Formula::withCount('formulaDetails');
+        
+        // Apply date filters only if provided
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $formulas = $this->applyDateFilters($formulas, $request, 'created_at');
+        }
+        
+        $data = $formulas->get()->map(function($formula) {
+            return [
+                'no' => $formula->no,
+                'name' => $formula->name,
+                'total' => 'Rp ' . number_format($formula->total, 0, ',', '.'),
+                'materials_count' => $formula->formula_details_count,
+                'created_at' => $formula->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
+        
+        $headers = [
+            'no' => 'No',
+            'name' => 'Name', 
+            'total' => 'Total',
+            'materials_count' => 'Materials Count',
+            'created_at' => 'Created At'
+        ];
+        
+        return $this->exportWithImages($data, $headers, null, 'formulas');
     }
 
     /**
