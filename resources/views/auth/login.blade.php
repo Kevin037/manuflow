@@ -69,7 +69,7 @@
 
         <!-- Submit Button -->
         <div>
-            <button type="submit" 
+            <button type="submit" data-no-spinner
                 class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 shadow-sm">
                 <span class="absolute left-0 inset-y-0 flex items-center pl-3">
                     <i class="fas fa-sign-in-alt text-primary-500 group-hover:text-primary-400 transition-colors duration-200"></i>
@@ -101,3 +101,87 @@
         </div>
     </form>
 </x-guest-layout>
+
+<script>
+// Page-scoped, reliable submit spinner for the Login form
+(function () {
+    function attachLoginSpinner() {
+        var form = document.querySelector('form[action*="login"], form[action="{{ route('login') }}"]');
+        if (!form) return;
+
+        var lastSubmitter = null;
+        function rememberFromEvent(e) {
+            var t = e.target && e.target.closest ? e.target.closest('button[type="submit"], input[type="submit"]') : null;
+            if (!t) return;
+            var f = t.form || (t.closest && t.closest('form'));
+            if (f === form) lastSubmitter = t;
+        }
+        function rememberOnEnter(e) {
+            if (e.key !== 'Enter') return;
+            var target = e.target && e.target.closest ? e.target : null;
+            if (!target) return;
+            var f = target.closest && target.closest('form');
+            if (f !== form) return;
+            var cand = form.querySelector('button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled])');
+            if (cand) lastSubmitter = cand;
+        }
+
+        document.addEventListener('click', rememberFromEvent, true);
+        document.addEventListener('mousedown', rememberFromEvent, true);
+        document.addEventListener('keydown', rememberOnEnter, true);
+
+        form.addEventListener('submit', function (e) {
+            if (e.defaultPrevented) return;
+            if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
+
+            var btn = (e.submitter) ? e.submitter : (lastSubmitter || form.querySelector('button[type="submit"], input[type="submit"]'));
+            if (!btn) return;
+
+            // Skip if opted out or already active
+            if (btn.hasAttribute('data-spinner-active')) return;
+
+            // Disable all submits in form to prevent alternate submits
+            var submits = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submits.forEach(function (el) { el.disabled = true; });
+
+            // Mark active
+            btn.dataset.spinnerActive = 'true';
+            btn.setAttribute('aria-busy', 'true');
+
+            // Spinner SVG (Tailwind animate-spin)
+            var spinnerSvg = '<svg class="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+                                             '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>' +
+                                             '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>' +
+                                             '</svg>';
+
+            if (btn.tagName === 'BUTTON') {
+                if (!btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
+                var w = btn.offsetWidth, h = btn.offsetHeight;
+                btn.style.width = w + 'px';
+                btn.style.height = h + 'px';
+                btn.classList.add('items-center','justify-center');
+                btn.innerHTML = spinnerSvg;
+            } else if (btn.tagName === 'INPUT') {
+                var w2 = btn.offsetWidth, h2 = btn.offsetHeight;
+                if (!btn.dataset.originalHidden) btn.dataset.originalHidden = btn.style.display || '';
+                var clone = document.createElement('button');
+                clone.type = 'button';
+                clone.disabled = true;
+                clone.className = btn.className;
+                clone.style.width = w2 + 'px';
+                clone.style.height = h2 + 'px';
+                clone.classList.add('flex','items-center','justify-center');
+                clone.innerHTML = spinnerSvg;
+                btn.style.display = 'none';
+                if (btn.parentNode) btn.parentNode.insertBefore(clone, btn.nextSibling);
+            }
+        }, { capture: true });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachLoginSpinner, { once: true });
+    } else {
+        attachLoginSpinner();
+    }
+})();
+</script>

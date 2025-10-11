@@ -219,8 +219,8 @@
 
 <!-- Quick Actions -->
 <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <div class="relative group cursor-pointer">
-        <div class="rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white shadow-md hover:shadow-lg transition-all duration-200 transform group-hover:scale-105">
+    <div class="relative group">
+        <a href="{{ route('products.create') }}" class="block rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white shadow-md hover:shadow-lg transition-all duration-200 transform group-hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" aria-label="Add Product">
             <div class="flex items-center">
                 <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4 8-4M4 7v10l8 4 8-4V7"/>
@@ -230,11 +230,11 @@
                     <p class="text-primary-100">Create new product</p>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     
-    <div class="relative group cursor-pointer">
-        <div class="rounded-xl bg-gradient-to-r from-green-500 to-green-600 p-6 text-white shadow-md hover:shadow-lg transition-all duration-200 transform group-hover:scale-105">
+    <div class="relative group">
+        <a href="{{ route('materials.create') }}" class="block rounded-xl bg-gradient-to-r from-green-500 to-green-600 p-6 text-white shadow-md hover:shadow-lg transition-all duration-200 transform group-hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" aria-label="Add Material">
             <div class="flex items-center">
                 <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
@@ -244,11 +244,25 @@
                     <p class="text-green-100">Register new material</p>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     
-    <div class="relative group cursor-pointer">
-        <div class="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white shadow-md hover:shadow-lg transition-all duration-200 transform group-hover:scale-105">
+    <div class="relative group">
+        <a href="{{ route('purchase-orders.create') }}" class="block rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 p-6 text-white shadow-md hover:shadow-lg transition-all duration-200 transform group-hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" aria-label="Create Purchase Order">
+            <div class="flex items-center">
+                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium">Purchase Order</h3>
+                    <p class="text-purple-100">Create Purchase Order</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="relative group">
+        <a href="{{ route('sales-orders.create') }}" class="block rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white shadow-md hover:shadow-lg transition-all duration-200 transform group-hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" aria-label="Create Sales Order">
             <div class="flex items-center">
                 <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -258,21 +272,7 @@
                     <p class="text-blue-100">Create Order</p>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <div class="relative group cursor-pointer">
-        <div class="rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 p-6 text-white shadow-md hover:shadow-lg transition-all duration-200 transform group-hover:scale-105">
-            <div class="flex items-center">
-                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                <div class="ml-3">
-                    <h3 class="text-lg font-medium">View Reports</h3>
-                    <p class="text-purple-100">Analytics & insights</p>
-                </div>
-            </div>
-        </div>
+        </a>
     </div>
 </div>
 @endsection
