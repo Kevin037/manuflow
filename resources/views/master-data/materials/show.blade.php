@@ -35,7 +35,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Price</label>
-                    <p class="text-gray-900 text-lg">@rupiah($material->price)</p>
+                    <p class="text-gray-900 text-lg">Rp {{ number_format($material->price, 0, ',', '.') }}</p>
                 </div>
 
                 <div>
@@ -45,7 +45,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Total Value</label>
-                    <p class="text-gray-900 text-lg font-semibold">@rupiah($material->total_value)</p>
+                    <p class="text-gray-900 text-lg font-semibold">Rp {{ number_format($material->total_value, 0, ',', '.') }}</p>
                 </div>
 
                 <div>

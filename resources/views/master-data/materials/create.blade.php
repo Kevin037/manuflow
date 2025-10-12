@@ -132,38 +132,4 @@
         </div>
     </div>
 </div>
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    // Initialize Select2 for supplier dropdown
-    $('#supplier_id').select2({
-        theme: 'bootstrap-5',
-        placeholder: 'Select a supplier (optional)',
-        allowClear: true,
-        templateResult: function(option) {
-            if (!option.id) {
-                return option.text;
-            }
-            
-            const parts = option.text.split(' - ');
-            if (parts.length > 1) {
-                return $(`
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="font-medium text-gray-900">${parts[0]}</div>
-                            <div class="text-sm text-gray-500">${parts[1]}</div>
-                        </div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                        </svg>
-                    </div>
-                `);
-            }
-            return option.text;
-        }
-    });
-});
-</script>
-@endpush
 @endsection
