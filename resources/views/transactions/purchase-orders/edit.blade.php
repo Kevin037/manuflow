@@ -51,8 +51,8 @@
                         <label for="supplier_id" class="block text-sm font-semibold text-gray-700 mb-2">
                             Supplier *
                         </label>
-                        <select name="supplier_id" id="supplier_id" 
-                                class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('supplier_id') border-red-500 ring-2 ring-red-200 @enderror">
+            <select name="supplier_id" id="supplier_id" 
+                class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('supplier_id') border-red-500 ring-2 ring-red-200 @enderror" style="width:100%;">
                             <option value="">Select Supplier</option>
                             @foreach($suppliers as $supplier)
                                 <option value="{{ $supplier->id }}" 
@@ -411,15 +411,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Initialize supplier select explicitly
+    // Initialize supplier select explicitly with allowClear and placeholder
     const supplierSelect = document.getElementById('supplier_id');
-    if (supplierSelect) initSelect2(supplierSelect);
+    function initSupplierSelect2() {
+        if (supplierSelect) {
+            try {
+                if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                    const $el = jQuery(supplierSelect);
+                    if (!$el.hasClass('select2-hidden-accessible') && !$el.data('select2')) {
+                        $el.select2({
+                            theme: 'bootstrap-5',
+                            width: 'style',
+                            allowClear: true,
+                            placeholder: 'Select Supplier',
+                            dropdownParent: jQuery(document.body)
+                        });
+                    } else {
+                        $el.trigger('change.select2');
+                    }
+                } else {
+                    document.dispatchEvent(new Event('reinit-select2'));
+                    setTimeout(() => { try { initSupplierSelect2(); } catch (e) {} }, 120);
+                }
+            } catch (e) { /* no-op */ }
+        }
+    }
+    initSupplierSelect2();
 
     // Initialize any existing material selects (if pre-rendered)
     document.querySelectorAll('.material-select').forEach(sel => initSelect2(sel));
 
     // Hook global reinit
     document.addEventListener('reinit-select2', function() {
+        initSupplierSelect2();
         document.querySelectorAll('select.select2').forEach(sel => initSelect2(sel));
     });
 
@@ -427,6 +451,30 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('load', function() {
         try {
             if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                // Supplier select re-init
+                if (supplierSelect) {
+                    const $el = jQuery(supplierSelect);
+                    if ($el.hasClass('select2-hidden-accessible')) {
+                        const val = $el.val();
+                        $el.select2('destroy');
+                        $el.select2({
+                            theme: 'bootstrap-5',
+                            width: 'style',
+                            allowClear: true,
+                            placeholder: 'Select Supplier',
+                            dropdownParent: jQuery(document.body)
+                        });
+                        if (val) { $el.val(val).trigger('change'); }
+                    } else {
+                        $el.select2({
+                            theme: 'bootstrap-5',
+                            width: 'style',
+                            allowClear: true,
+                            placeholder: 'Select Supplier',
+                            dropdownParent: jQuery(document.body)
+                        });
+                    }
+                }
                 document.querySelectorAll('.material-select').forEach(function(sel) {
                     const $el = jQuery(sel);
                     if ($el.hasClass('select2-hidden-accessible')) {

@@ -50,8 +50,8 @@
                         <label for="customer_id" class="block text-sm font-semibold text-gray-700 mb-2">
                             Customer *
                         </label>
-                        <select name="customer_id" id="customer_id" 
-                                class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_id') border-red-500 ring-2 ring-red-200 @enderror">
+            <select name="customer_id" id="customer_id" 
+                class="select2 w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_id') border-red-500 ring-2 ring-red-200 @enderror" style="width:100%;">
                             <option value="">Select Customer</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
@@ -479,15 +479,39 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
     });
-    // Initialize customer select explicitly
+    // Initialize customer select explicitly with allowClear and placeholder
     const customerSelect = document.getElementById('customer_id');
-    if (customerSelect) initSelect2(customerSelect);
+    function initCustomerSelect2() {
+        if (customerSelect) {
+            try {
+                if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                    const $el = jQuery(customerSelect);
+                    if (!$el.hasClass('select2-hidden-accessible') && !$el.data('select2')) {
+                        $el.select2({
+                            theme: 'bootstrap-5',
+                            width: 'style',
+                            allowClear: true,
+                            placeholder: 'Select Customer',
+                            dropdownParent: jQuery(document.body)
+                        });
+                    } else {
+                        $el.trigger('change.select2');
+                    }
+                } else {
+                    document.dispatchEvent(new Event('reinit-select2'));
+                    setTimeout(() => { try { initCustomerSelect2(); } catch (e) {} }, 120);
+                }
+            } catch (e) { /* no-op */ }
+        }
+    }
+    initCustomerSelect2();
 
     // Initialize any existing product selects (if any pre-rendered in future)
     document.querySelectorAll('.product-select').forEach(sel => initSelect2(sel));
 
     // Global reinit hook
     document.addEventListener('reinit-select2', function() {
+        initCustomerSelect2();
         document.querySelectorAll('select.select2').forEach(sel => initSelect2(sel));
     });
 
@@ -495,6 +519,30 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('load', function() {
         try {
             if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+                // Customer select re-init
+                if (customerSelect) {
+                    const $el = jQuery(customerSelect);
+                    if ($el.hasClass('select2-hidden-accessible')) {
+                        const val = $el.val();
+                        $el.select2('destroy');
+                        $el.select2({
+                            theme: 'bootstrap-5',
+                            width: 'style',
+                            allowClear: true,
+                            placeholder: 'Select Customer',
+                            dropdownParent: jQuery(document.body)
+                        });
+                        if (val) { $el.val(val).trigger('change'); }
+                    } else {
+                        $el.select2({
+                            theme: 'bootstrap-5',
+                            width: 'style',
+                            allowClear: true,
+                            placeholder: 'Select Customer',
+                            dropdownParent: jQuery(document.body)
+                        });
+                    }
+                }
                 document.querySelectorAll('.product-select').forEach(function(sel) {
                     const $el = jQuery(sel);
                     if ($el.hasClass('select2-hidden-accessible')) {
