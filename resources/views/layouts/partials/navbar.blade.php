@@ -201,10 +201,35 @@ document.addEventListener('alpine:init', () => {
         open: false,
         toggle() {
             this.open = !this.open;
+            this._applyBodyLock();
         },
         close() {
             this.open = false;
+            this._applyBodyLock();
+        },
+        _applyBodyLock() {
+            const isDesktop = window.matchMedia('(min-width: 1024px)').matches; // lg breakpoint
+            const html = document.documentElement;
+            const body = document.body;
+            if (this.open && !isDesktop) {
+                html.classList.add('overflow-hidden');
+                body.classList.add('overflow-hidden');
+            } else {
+                html.classList.remove('overflow-hidden');
+                body.classList.remove('overflow-hidden');
+            }
         }
+    });
+
+    // Global listeners for escape key and resize to keep lock state correct
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && Alpine.store('sidebar').open) {
+            Alpine.store('sidebar').close();
+        }
+    });
+    window.addEventListener('resize', () => {
+        // If switching to desktop, ensure no body lock is present
+        Alpine.store('sidebar')._applyBodyLock();
     });
 });
 </script>

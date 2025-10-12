@@ -1,3 +1,17 @@
+<!-- Sidebar backdrop for mobile (placed outside aside to avoid transform containment) -->
+<div 
+    x-show="$store.sidebar.open" 
+    @click="$store.sidebar.close()"
+    class="fixed inset-0 bg-gray-900 bg-opacity-50 z-30 lg:hidden"
+    x-transition:enter="transition-opacity ease-linear duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition-opacity ease-linear duration-300"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    style="display: none;"
+></div>
+
 <aside 
     class="fixed top-0 left-0 z-40 w-sidebar h-screen pt-topbar transition-transform duration-300 ease-in-out bg-white border-r border-gray-200 shadow-lg lg:translate-x-0"
     :class="$store.sidebar.open ? 'translate-x-0' : '-translate-x-full'"
@@ -23,19 +37,6 @@
         }
     }"
 >
-    <!-- Sidebar backdrop for mobile -->
-    <div 
-        x-show="$store.sidebar.open" 
-        @click="$store.sidebar.close()"
-        class="fixed inset-0 bg-gray-900 bg-opacity-50 z-30 lg:hidden"
-        x-transition:enter="transition-opacity ease-linear duration-300"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition-opacity ease-linear duration-300"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-    ></div>
-
     <div class="h-full px-3 pb-4 overflow-y-auto bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <ul class="space-y-2 font-medium pt-4">
             <!-- Dashboard -->
