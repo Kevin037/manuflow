@@ -31,5 +31,8 @@ class DatabaseSeeder extends Seeder
 
         // Chart of Accounts
         $this->call(AccountsTableSeeder::class);
+
+        // Demo data across all models
+        $this->call(DemoDataSeeder::class);
     }
 }
