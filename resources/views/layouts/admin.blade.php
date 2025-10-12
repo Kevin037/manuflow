@@ -28,6 +28,93 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
     
     @stack('styles')
+
+    <style>
+        /* Modern, unified DataTables pagination styling */
+        .dataTables_wrapper .dataTables_paginate {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.25rem;
+            padding-top: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 2.25rem;
+            min-width: 2.25rem;
+            padding: 0 0.75rem;
+            margin: 0 2px;
+            border: 1px solid #e5e7eb !important; /* gray-200 */
+            border-radius: 9999px; /* full */
+            background: #ffffff !important;
+            color: #374151 !important; /* gray-700 */
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+            cursor: pointer;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+            background: #f9fafb !important; /* gray-50 */
+            border-color: #d1d5db !important; /* gray-300 */
+            color: #111827 !important; /* gray-900 */
+            cursor: pointer;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #4F46E5 !important; /* primary-600 */
+            border-color: #4F46E5 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.25);
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.35);
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            cursor: default !important;
+            background: #f3f4f6 !important; /* gray-100 */
+            border-color: #e5e7eb !important; /* gray-200 */
+            color: #9ca3af !important; /* gray-400 */
+            box-shadow: none !important;
+            opacity: 0.8;
+        }
+
+        /* Previous/Next adornments */
+        .dataTables_wrapper .dataTables_paginate .paginate_button.previous::before {
+            content: '\2039'; /* ‹ */
+            display: inline-block;
+            margin-right: .375rem;
+            font-size: .9em;
+            line-height: 1;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.next::after {
+            content: '\203A'; /* › */
+            display: inline-block;
+            margin-left: .375rem;
+            font-size: .9em;
+            line-height: 1;
+        }
+
+        /* Ellipsis style for long pagination ranges */
+        .dataTables_wrapper .dataTables_paginate span.ellipsis {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 2.25rem;
+            min-width: 2.25rem;
+            padding: 0 0.5rem;
+            margin: 0 2px;
+            color: #6b7280; /* gray-500 */
+        }
+    </style>
 </head>
 <body class="h-full bg-gray-50" x-data="{ sidebarOpen: false }">
     <div class="min-h-full">
