@@ -23,7 +23,7 @@ class PurchaseOrderController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $purchaseOrders = PurchaseOrder::with('supplier')->latest();
+            $purchaseOrders = PurchaseOrder::with(['supplier', 'purchaseOrderDetails.material'])->latest();
 
             return DataTables::of($purchaseOrders)
                 ->addIndexColumn()
@@ -139,11 +139,46 @@ class PurchaseOrderController extends Controller
             if($amount>0){
                 $accounting->record('purchase_order', $purchaseOrder->id, 'PurchaseOrder', $amount, $purchaseOrder->dt->format('Y-m-d'), 'Purchase order created '.$purchaseOrder->no);
             }
+            // Build WhatsApp link to notify supplier
+            $purchaseOrder->loadMissing(['supplier', 'purchaseOrderDetails.material']);
+            $waLink = null;
+            if ($purchaseOrder->supplier && !empty($purchaseOrder->supplier->phone)) {
+                $lines = [];
+                $lines[] = 'Purchase Order ' . ($purchaseOrder->no ?? '#');
+                $lines[] = 'Date: ' . $purchaseOrder->dt->format('Y-m-d');
+                $lines[] = 'Supplier: ' . $purchaseOrder->supplier->name;
+                $lines[] = '';
+                $lines[] = 'Items:';
+                foreach ($purchaseOrder->purchaseOrderDetails as $d) {
+                    $matName = optional($d->material)->name ?? 'Unknown';
+                    $unit = optional($d->material)->unit ?? '';
+                    $qty = rtrim(rtrim(number_format((float)$d->qty, 2, '.', ''), '0'), '.');
+                    $lines[] = '• ' . $matName . ' — ' . $qty . ($unit ? (' ' . $unit) : '');
+                }
+                $lines[] = '';
+                $lines[] = 'Total: Rp ' . number_format((float)$purchaseOrder->total, 0, ',', '.');
+                $lines[] = '';
+                $lines[] = 'Terima kasih.';
+
+                $message = implode("\n", $lines);
+                $phone = preg_replace('/\D+/', '', $purchaseOrder->supplier->phone);
+                if (!empty($phone)) {
+                    if (substr($phone, 0, 1) === '0') {
+                        $phone = '62' . substr($phone, 1);
+                    }
+                    $waLink = 'https://wa.me/' . $phone . '?text=' . rawurlencode($message);
+                }
+            }
+
             DB::commit();
 
-            return redirect()
+            $redirect = redirect()
                 ->route('purchase-orders.index')
                 ->with('success', 'Purchase order created successfully');
+            if ($waLink) {
+                $redirect->with('wa_link', $waLink);
+            }
+            return $redirect;
 
         } catch (\Exception $e) {
             DB::rollBack();

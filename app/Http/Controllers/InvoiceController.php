@@ -107,8 +107,49 @@ class InvoiceController extends Controller
             if($amount > 0){
                 $accounting->record('invoice_sent', $invoice->id, 'Invoice', $amount, $invoice->dt->format('Y-m-d'), 'Invoice created '.$invoice->no);
             }
+            
+            // Build WhatsApp link to notify customer about the invoice
+            $invoice->loadMissing(['order.customer','order.orderDetails.product']);
+            $waLink = null;
+            try {
+                $customer = $invoice->order?->customer;
+                if ($customer && !empty($customer->phone)) {
+                    $lines = [];
+                    $lines[] = 'Invoice ' . ($invoice->no ?? '#');
+                    $lines[] = 'Date: ' . $invoice->dt->format('Y-m-d');
+                    if ($invoice->order?->no) {
+                        $lines[] = 'Order: ' . $invoice->order->no;
+                    }
+                    $lines[] = 'Customer: ' . $customer->name;
+                    $lines[] = '';
+                    $lines[] = 'Items:';
+                    foreach (($invoice->order?->orderDetails ?? []) as $d) {
+                        $prodName = optional($d->product)->name ?? 'Unknown';
+                        $unit = optional($d->product)->unit ?? '';
+                        $qty = rtrim(rtrim(number_format((float)$d->qty, 2, '.', ''), '0'), '.');
+                        $lines[] = '• ' . $prodName . ' — ' . $qty . ($unit ? (' ' . $unit) : '');
+                    }
+                    $lines[] = '';
+                    $lines[] = 'Total: Rp ' . number_format((float)($invoice->order?->total ?? 0), 0, ',', '.');
+                    $lines[] = '';
+                    $lines[] = 'Terima kasih.';
+
+                    $message = implode("\n", $lines);
+                    $phone = preg_replace('/\D+/', '', $customer->phone);
+                    if (!empty($phone)) {
+                        if (substr($phone, 0, 1) === '0') {
+                            $phone = '62' . substr($phone, 1);
+                        }
+                        $waLink = 'https://wa.me/' . $phone . '?text=' . rawurlencode($message);
+                    }
+                }
+            } catch (\Throwable $th) {
+                $waLink = null;
+            }
             DB::commit();
-            return redirect()->route('invoices.index')->with('success','Invoice created successfully');
+            $redirect = redirect()->route('invoices.index')->with('success','Invoice created successfully');
+            if ($waLink) { $redirect->with('wa_link', $waLink); }
+            return $redirect;
         } catch(\Exception $e){
             DB::rollBack();
             return back()->withInput()->with('error','Failed to create invoice: '.$e->getMessage());

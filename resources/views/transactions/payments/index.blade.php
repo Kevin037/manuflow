@@ -91,6 +91,18 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function(){
+  // After redirect from create/update, show success and open WhatsApp if available
+  @if(session('success'))
+    Swal.fire({
+      title: 'Success',
+      text: @json(session('success')),
+      icon: 'success',
+      confirmButtonColor: '#10b981'
+    }).then(() => {
+      const wa = @json(session('wa_link'));
+      if (wa) { try { window.open(wa, '_blank'); } catch (e) {} }
+    });
+  @endif
   var table = $('#dataTable').DataTable({
     processing:true,
     serverSide:true,

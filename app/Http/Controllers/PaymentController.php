@@ -104,8 +104,43 @@ class PaymentController extends Controller
 
             // Record accounting journal entries (payment received)
             $accounting->record('payment_received', $payment->id, 'Payment', (float)$payment->amount, $payment->paid_at->format('Y-m-d'), 'Payment received for invoice '.$invoice->no);
+            
+            // Build WhatsApp message to notify customer about received/recorded payment
+            $invoice->loadMissing('order.customer');
+            $waLink = null;
+            try {
+                $customer = $invoice->order?->customer;
+                if ($customer && !empty($customer->phone)) {
+                    $lines = [];
+                    $lines[] = 'Payment Receipt ' . ($payment->no ?? '#');
+                    $lines[] = 'Date: ' . optional($payment->paid_at)->format('Y-m-d');
+                    if ($invoice->no) { $lines[] = 'Invoice: ' . $invoice->no; }
+                    $lines[] = 'Customer: ' . $customer->name;
+                    $lines[] = '';
+                    $lines[] = 'Amount: Rp ' . number_format((float)$payment->amount, 0, ',', '.');
+                    $paid = (float)($invoice->payments->sum('amount'));
+                    $orderTotal = (float)($invoice->order->total ?? 0);
+                    $remaining = max($orderTotal - $paid, 0);
+                    $lines[] = 'Paid to date: Rp ' . number_format($paid, 0, ',', '.');
+                    $lines[] = 'Remaining: Rp ' . number_format($remaining, 0, ',', '.');
+                    $lines[] = '';
+                    $lines[] = 'Terima kasih.';
+
+                    $message = implode("\n", $lines);
+                    $phone = preg_replace('/\D+/', '', $customer->phone);
+                    if (!empty($phone)) {
+                        if (substr($phone, 0, 1) === '0') {
+                            $phone = '62' . substr($phone, 1);
+                        }
+                        $waLink = 'https://wa.me/' . $phone . '?text=' . rawurlencode($message);
+                    }
+                }
+            } catch (\Throwable $th) { $waLink = null; }
+
             DB::commit();
-            return redirect()->route('payments.index')->with('success','Payment recorded successfully');
+            $redirect = redirect()->route('payments.index')->with('success','Payment recorded successfully');
+            if ($waLink) { $redirect->with('wa_link', $waLink); }
+            return $redirect;
         } catch(\Exception $e){
             DB::rollBack();
             return back()->withInput()->with('error','Failed to record payment: '.$e->getMessage());
